@@ -1,0 +1,56 @@
+# Ignore file types
+*.log
+*.lock
+*.json
+your-company-logo.png
+
+# Ignore bundler config.
+/.bundle
+
+# Ignore all logfiles and tempfiles.
+log
+/log/*
+!/log/.keep
+/tmp/
+
+# Ignore upload files which are user specific
+/uploads
+/uploads/.*
+/downloads
+/downloads/.*
+
+# Ignore master key for decrypting credentials and more.
+/config/master.key
+
+# Ignore AWS accounts yml
+/config/aws.yml
+/config/ldap.yml
+/config/local_admin.yml
+
+# Ignore database yml
+/config/database.yml
+
+# Ignore puma configuration
+# /config/puma.rb
+
+# Ignore private data folder
+private/
+
+# Ignore assets pipeline
+public/assets/
+
+# Ignore deploy_auditor.sh
+/bin/deploy_auditor.sh
+
+# Ignore encryption file
+credentials.yml.enc
+
+# Ignore development db
+/db/*.sqlite3
+
+# Ignore AWS CLI profile / crentials
+/.aws/.*
+/.aws/*
+
+# Ignore cache directory
+cache/

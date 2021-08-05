@@ -1,0 +1,36 @@
+<h4>AWS SSL Policy Search Results: <%= @keyword %></h4>
+<br>Total Count: <%= @results.count %> 
+<br>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>AWS Account Name </th>
+      <th>AWS Account ID </th>
+      <th>AWS Region  </th>
+      <th>AWS VPC ID</th>
+      <th>AWS LBS ID </th>
+      <th>AWS LBS Listener Port </th>
+      <th>AWS SSL Policy </th>
+    </tr>
+  </thead>
+
+  <tbody>
+
+  <% @results.map do |entry| %>
+    <% base_uri = "/aws_scout/" + entry["aws_acct"] + "/aws-auditor.html#services.elbv2.regions." %>
+    <% base_uri_2 = "/aws_scout/" + entry["aws_acct"] + "/aws-auditor.html#services.vpc.regions." %>
+
+    <tr>
+      <td><%= entry["aws_acct_name"] %></td>
+      <td><%= entry["aws_acct"] %></td>
+      <td><%= entry["reg"]  %></td>
+      <td><%= link_to entry["vpc_id"], base_uri_2 + "id.vpcs", target: "_blank" %></td>
+      <td><%= link_to entry["lbs_id"], base_uri + "id.vpcs.id.lbs", target: "_blank" %></td>
+      <td><%= link_to entry["listener_port"], base_uri + "id.vpcs.id.lbs", target: "_blank" %></td>
+      <td><%= link_to entry["policy"], base_uri + "id.vpcs.id.lbs", target: "_blank" %></td>
+    </tr>
+  <% end %>
+
+  </tbody>
+</table>

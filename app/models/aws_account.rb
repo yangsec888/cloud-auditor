@@ -1,0 +1,2 @@
+class AwsAccount < ApplicationRecord
+end

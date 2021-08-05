@@ -1,0 +1,30 @@
+
+<h4> AWS SSL Policy Search </h4>
+<br />
+
+<div class=" col-md-9 col-lg-9">
+  <p>
+  <button type="button" class="pull-left btn btn-default" title="Import Instructions"
+    data-container="body" data-toggle="popover" data-placement="right"
+    data-content="Search Format: <br>
+    <ul>
+        <li> One entry text string format only such as 'ELBSecurityPolicy-TLS-1-2-2017-01'</li>
+        <li> Ask your administrator for the information if necessary </li>
+    </ul>
+        "><span class="glyphicon glyphicon-question-sign"></span>Search Format</button>
+</div>
+
+<div class="row"> </div>
+<div class="col-sm-4 col-md-6 col-lg-6" style="margin-top: 20px; ">
+  <div class="form-inline">
+      <%= form_tag(aws_accounts_search_ssl_policy_results_path,:method => 'post') do %>
+      <%= text_field_tag :keyword, nil, class: "form-control", placeholder: "SSL Policy", size: "16" %>
+      <button class="btn btn-default" type="submit">
+          <span class="glyphicon glyphicon-search"></span>
+          Search
+      </button>
+      <% end %>
+      <!-- /input-group -->
+  </div>
+</div>
+<div class="row"> </div>

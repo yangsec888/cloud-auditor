@@ -1,0 +1,87 @@
+version: '2'
+services:
+  app:
+    container_name: "cloud-auditor"
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/cloud-auditor:cached
+      - static-content:/cloud-auditor/private
+    restart: always
+    env_file:
+      - .env
+
+  nginx:
+    image: nginx:1.16.1
+    volumes_from:
+      - app
+    depends_on:
+      - app
+    ports:
+      - 80:80
+      - 443:443
+    links:
+      - app
+    volumes:
+      - ./config/nginx:/etc/nginx/conf.d/:ro
+
+  scoutsuite:
+    container_name: "scoutsuite"
+    image: yangsec888/scout_suite:latest
+    volumes_from:
+      - app
+    volumes:
+      - ./.aws:/root/.aws/:ro
+    depends_on:
+      - app
+    restart: always
+
+  prowler:
+    container_name: "prowler"
+    image: yangsec888/prowler:latest
+    volumes_from:
+      - app
+    volumes:
+      - ./.aws/:/root/.aws/:ro
+    depends_on:
+      - app
+    restart: always
+
+  redis:
+    container_name: "redis"
+    image: redis:alpine
+    restart: always
+    volumes:
+      - 'redis:/data'
+
+  sidekiq:
+    container_name: "sidekiq"
+    build: .
+    command: bundle exec sidekiq
+    depends_on:
+      - redis
+      - app
+    volumes:
+      - .:/cloud-auditor
+    env_file:
+      - .env
+
+  smtp:
+    image: "catatnight/postfix"
+    ports:
+      - "25:25"
+    volumes:
+      - ${PWD}/config/postfix/main.cf:/etc/postfix/main.cf:ro
+      - ${PWD}/config/postfix/mailname:/etc/mailname:ro
+    environment:
+      - maildomain=your_company.com
+    restart: always
+
+volumes:
+  static-content:
+  redis:
+  assets:
+    external: false
+  data:
+    external: false

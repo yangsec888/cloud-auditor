@@ -1,0 +1,30 @@
+
+<h4> AWS Asset Search </h4>
+<br />
+
+<div class=" col-md-9 col-lg-9">
+  <p>
+  <button type="button" class="pull-left btn btn-default" title="Import Instructions"
+    data-container="body" data-toggle="popover" data-placement="right"
+    data-content="CIDR Import Format: <br>
+    <ul><li> <a href='https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing' target='_blank'>CIDR Notation</a> Only  </li>
+        <li> One entry in standard x.x.x.x/x format only </li>
+        <li> Ask your network administrator for the information if necessary </li>
+    </ul>
+        "><span class="glyphicon glyphicon-question-sign"></span>CIDR Format</button>
+</div>
+
+<div class="row"> </div>
+<div class="col-sm-4 col-md-6 col-lg-6" style="margin-top: 20px; ">
+  <div class="form-inline">
+      <%= form_tag(aws_accounts_search_results_path,:method => 'post') do %>
+      <%= text_field_tag :keyword, nil, class: "form-control", placeholder: "CIDR", size: "16" %>
+      <button class="btn btn-default" type="submit">
+          <span class="glyphicon glyphicon-search"></span>
+          Search
+      </button>
+      <% end %>
+      <!-- /input-group -->
+  </div>
+</div>
+<div class="row"> </div>

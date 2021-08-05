@@ -1,0 +1,46 @@
+<% if @format=="aws_scout"; report_title="ScoutSuite Audit Reports"; elsif @format=="aws_prow"; report_title="Prowler Audit Reports"; end %>
+<h4>AWS <%= report_title %></h4>
+</br>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th><%= aws_sortable "acct_id", "Account ID", @format %></th>
+      <th><%= aws_sortable "name", "Name", @format %></th>
+      <th><%= aws_sortable "desc", "Desc", @format %></th>
+      <th>Bus Unit</th>
+      <th>Contact</th>
+      <% if @format == "aws_prow" %>
+        <th><%= aws_sortable "prow_audit_time", "Audit Time", @format %></th>
+      <% else %>
+        <th><%= aws_sortable "scout_audit_time", "Audit Time", @format %></th>
+      <% end %>
+      <th colspan="3">Action</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @aws_accounts.each do |aws_account| %>
+      <tr>
+        <% file = "/" + @format + "/" + aws_account.acct_id + "/aws-auditor.html" %>
+        <td><%= link_to aws_account.acct_id, file, target: "_blank" %></td>
+        <td><%= aws_account.name %></td>
+        <td><%= aws_account.desc %></td>
+        <td><%= aws_account.bus_unit %></td>
+        <td><%= aws_account.contact %></td>
+        <% if @format=="aws_scout" %>
+          <td><%= aws_account.scout_audit_time %></td>
+        <% else %>
+          <td><%= aws_account.prow_audit_time %></td>
+        <% end %>
+        <td><%= link_to 'Show', aws_account %></td>
+        <td><%= link_to 'Edit', edit_aws_account_path(aws_account) %></td>
+        <td><%= link_to 'Destroy', aws_account, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New AWS Account', new_aws_account_path %>

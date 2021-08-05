@@ -1,0 +1,34 @@
+<h4>AWS CIDR Search Results: <%= @keyword %></h4>
+<br>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>AWS Account Name </th>
+      <th>AWS Account ID </th>
+      <th>AWS Region  </th>
+      <th>AWS VPC ID</th>
+      <th>AWS Subnet ID </th>
+      <th>AWS Subnet Name </th>
+      <th>AWS CIDR Block </th>
+    </tr>
+  </thead>
+
+  <tbody>
+
+  <% @results.map do |entry| %>
+    <% base_uri= "/aws_scout/" + entry["aws_acct"] + "/aws-auditor.html#services.vpc.regions." %>
+    <tr>
+      <td><%= entry["aws_acct_name"] %></td>
+      <td><%= entry["aws_acct"] %></td>
+      <td><%= entry["reg"]  %></td>
+      <td><%= link_to entry["vpc_id"], base_uri+"id.vpcs", target: "_blank" %></td>
+      <td><%= link_to entry["subnet_id"], base_uri+"id.vpcs.id.subnets", target: "_blank" %></td>
+      <td><%= link_to entry["subnet_name"], base_uri+"id.vpcs.id.subnets", target: "_blank" %></td>
+      <td><%= link_to entry["cidrblock"], base_uri+"id.vpcs.id.subnets", target: "_blank" %></td>
+
+    </tr>
+  <% end %>
+
+  </tbody>
+</table>

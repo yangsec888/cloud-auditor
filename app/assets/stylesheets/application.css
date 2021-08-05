@@ -1,0 +1,284 @@
+/*
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, vendor/assets/stylesheets,
+ * or any plugin's vendor/assets/stylesheets directory can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
+ * compiled file so the styles you add here take precedence over styles defined in any styles
+ * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
+ * file per style scope.
+ *
+ *= require_tree .
+ *= require_self
+ *= require bootstrap.min
+ *= require rails_bootstrap_forms
+ *= require jstree.min
+ */
+ html{
+   height: 100%;
+ }
+ /*
+body {
+     background-image: url(/bg.gif);
+     background-repeat: no-repeat;
+     background-size: 100%;
+     background-color: #FFFFFF;
+     height: 100%;
+ }
+*/
+
+.container {
+  flex: auto;
+  background-color: #FFFFFF;
+  width: auto !important;
+  height:100%;
+  margin: 0px auto;
+  padding-right:24px;
+  padding-left:24px;
+}
+
+
+body{margin:0;}
+.footer_placeholder{clear:both;}
+
+a:link {
+color:#001BFF;
+text-decoration:none;
+}
+a:visited {
+color:#9009BF;
+text-decoration:none;
+}
+a:hover {
+color:#001BFF;
+text-decoration:none;
+}
+a:active {
+color:#FF0000;
+text-decoration:none;
+}
+
+.carousel {
+width:100%;
+margin:0 auto; /* center your carousel if other than 100% */
+}
+
+.carousel img {
+  min-width: 100%;
+}
+
+.carousel .item {
+    width:100%;
+    height:100%;
+}
+.carousel-inner > .item > img {
+  min-width:100%;
+  height:auto;
+}
+
+.alert {
+ padding: 2px 2px 0px 3px;
+ margin: 10px 2px 15px 15px;
+ text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+ border: 1px solid;
+ -webkit-border-radius: 4px;
+ -moz-border-radius: 4px;
+ border-radius: 4px;
+ font-size: 16px;
+}
+
+.alert-temp{
+  margin-left:20px;
+  margin-right:20px;
+}
+
+/* image zoom in effect for clickable */
+.clickable-img {
+  transition: 0.3s;
+}
+
+.clickable-img:hover {
+  transform: scale(1.2);
+}
+
+/* Other styling elements, that are not necessary for the example */
+
+.img-wrapper {
+  display: inline-block;
+  box-sizing: border-box;
+  //border: 1px solid #000;
+}
+
+@media print {
+  body {
+    background-color: #FFF;
+  }
+
+  #container {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+
+  #line_items {
+    page-break-before: always;
+  }
+
+  #pdf_link {
+    display: none;
+  }
+}
+
+.field_with_errors {
+  display: inline;
+}
+
+.field_with_errors .message {
+  color: #D00;
+  padding-left: 10px;
+  font-size: 12px;
+}
+
+th a.current {
+  padding-right: 20px;
+  background-repeat: no-repeat;
+  background-position: right center;
+}
+th a.current.asc {
+  background-image: url(/assets/up_arrow.gif);
+}
+th a.current.desc {
+  background-image: url(/assets/down_arrow.gif);
+}
+
+.navbar-default {
+  background: linear-gradient(#FFFFCC, #FFCC00);
+  height:5px;
+  border: 0;
+  border-color: #FFFFFF;
+}
+.navbar {min-height:45px !important;}
+.navbar .divider-vertical{height:20px;margin-top:10px;margin-left: 0px;border-right:1px solid #FFFFFF;padding-left:0px;}
+/* title */
+.navbar-default .navbar-brand {
+    color: #FFFFFF;
+    height: 20px;
+}
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
+    color: #FFFFFF;
+}
+/* link */
+.navbar-default .navbar-nav > li > a {
+    color: #FFFFFF;
+
+}
+.navbar-default .nav-tabs > li > a {
+   color: grey;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+    color: #FF0000;
+}
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+    color: #FF0000;
+}
+.navbar-default .navbar-nav > .open > a,
+.navbar-default .navbar-nav > .open > a:hover,
+.navbar-default .navbar-nav > .open > a:focus {
+    color: #FFFFFF;
+    background-color: #FFFFFF;
+}
+.navbar-default .nav-tabs {
+    border: 0px;
+    margin-top: 3px;
+    color: #FFFFFF;
+}
+.navbar-default .nav-tabs > li > a:hover,
+.navbar-default .nav-tabs > li > a:focus {
+   color: #000000;
+   background-color: #FFFFFF;
+}
+.navbar-default .nav-tabs > .active > a,
+.navbar-default .nav-tabs > .active > a:hover,
+.navbar-default .nav-tabs > .active > a:focus {
+   color: #FF0000;
+}
+.navbar-default .nav-tabs > .open > a,
+.navbar-default .nav-tabs > .open > a:hover,
+.navbar-default .nav-tabs > .open > a:focus {
+   color: #000000;
+   background-color: #FFFFFF;
+}
+/* caret */
+.navbar-default .navbar-nav > .dropdown > a .caret {
+    border-top-color: #777;
+    border-bottom-color: #777;
+}
+.navbar-default .navbar-nav > .dropdown > a:hover .caret,
+.navbar-default .navbar-nav > .dropdown > a:focus .caret {
+    border-top-color: #333;
+    border-bottom-color: #333;
+}
+.navbar-default .navbar-nav > .open > a .caret,
+.navbar-default .navbar-nav > .open > a:hover .caret,
+.navbar-default .navbar-nav > .open > a:focus .caret {
+    border-top-color: #555;
+    border-bottom-color: #555;
+}
+/* mobile version */
+.navbar-default .navbar-toggle {
+    border-color: #DDD;
+}
+.navbar-default .navbar-toggle:hover,
+.navbar-default .navbar-toggle:focus {
+    background-color: #DDD;
+}
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #CCC;
+}
+.dropdown-toggle > li > a {
+    color: black;
+}
+@media (max-width: 767px) {
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+        color: #777;
+    }
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover,
+    .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+        color: #333;
+    }
+}
+
+footer {
+    flex-shrink: 0;
+    background-color: white;
+    margin: 10px auto;
+}
+footer h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+footer > div,
+footer > .divider {
+    display: inline-block;
+    vertical-align: middle;
+}
+footer > div {
+    padding: 1%;
+    font-size: small;
+    text-align: center;
+    width:30%;
+}
+footer > .divider {
+    font-style: normal;
+    height: 14px;
+  border: 1px solid #888;
+  -webkit-box-shadow: 1px 2px 1px #ccc;
+  box-shadow: 1px 2px 1px #ccc;
+}

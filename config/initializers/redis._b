@@ -1,0 +1,28 @@
+# config/initializers/redis.rb
+# disable redis error log below in sidekiq connection:
+# sidekiq       | `Redis#exists(key)` will return an Integer in redis-rb 4.3. `exists?` returns a boolean, you should use it instead. To opt-in to the new behavior now you can set Redis.exists_returns_integer =  true. To disable this message and keep the current (boolean) behaviour of 'exists' you can set `Redis.exists_returns_integer = false`, but this option will be removed in 5.0. (/usr/local/bundle/gems/sidekiq-5.2.5/lib/sidekiq/launcher.rb:105:in `block (2 levels) in ❤')
+
+
+# start of workaround for redis 4.2.0
+# https://github.com/resque/redis-namespace/pull/171#issuecomment-670917998
+if Redis::Namespace::NAMESPACED_COMMANDS.key?("exists?")
+  raise "Redis::Namespace now supports variadac exists, you can remove below workaround!"
+end
+
+class Redis::Namespace
+  MY_HACKY_COMMANDS = {
+    'exists' => [:all],
+    'exists?' => [:all]
+  }
+  NAMESPACED_COMMANDS.reverse_merge!(MY_HACKY_COMMANDS)
+  COMMANDS.reverse_merge!(MY_HACKY_COMMANDS)
+
+  MY_HACKY_COMMANDS.keys.each do |command|
+    next if method_defined?(command)
+
+    define_method(command) do |*args, &block|
+      call_with_namespace(command, *args, &block)
+    end
+  end
+end
+# end of workaround

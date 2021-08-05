@@ -1,0 +1,37 @@
+/* This file is divided into two parts.
+   The first part is vital for the functioning of popups. You shouldn't edit it.
+   The second part defines the look. It is okay to edit. */
+
+.popup {
+  transition: all 0.4s linear;
+}
+
+#popup-backdrop {
+  opacity: 0;
+  transition: opacity 0.3s linear;
+}
+
+.closeButton {
+  width: 16px; height: 16px;
+
+  position: absolute;
+  cursor: pointer;
+}
+
+/* Below is the part that's okay to rewrite */
+
+.popup {
+  position: fixed; z-index: 999;
+  background: white;
+  left: 50%;
+  box-shadow: 0px 10px 20px rgba(0,0,0,0.3);
+  padding: 10px;
+}
+
+#popup-backdrop {
+  background-color: rgba(0,0,0,0.5);
+}
+
+.closeButton {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAfxJREFUOBGVk8trU1EQxnuvgdgEpKmEFk3qpnuhG7ELiaVuijsxpFSyKgZphDwW9i9QIs07BINIhAhCRGkpbRcuuqkKrkToqlKQ0GV3SUMeN/E3JSfcphHtwMnMme+b78zckzOSTCbHstnstZELWC6Xu5pKpSakRO92u9dbrdZ+PB4P/I8GhbcajcZvwzDuCF+TH7rwILRF6ItEIpuSG2aJRGIa3jdN057DSwrnVEACRBY7nc5rwDnA75IzWyaTcbbb7a/ktsBDCusLSIIxniEQJZyF9EuROHmUeJd1FA6HH8LpKExXgfhoNBrDfWDtyImSo2XhvMcbDodjyVws+JkOJFEuly9VKpVPECftdvvdarX6kvQ9q9U6GwwGj4VjtnMCAhYKBVutVpOWxzn5iq7rt2n90Fyo4jMjqGQgEDghLlE8jf/8t2LhDxXgRubBYoyxzPLwEVeFPMzOCXATNzn5I4Ur3MQb2l9gv0r+0T8F0un0FKRtitdo+60UhEKhnxaL5QHhq15nku5b/yPm83lHvV7fo/gLJz/uM3pBr4McHXkQ/6Hw0xG4cyvF6yQPXS7XEwWaPf+Rd+xjjLPNY7qhMHlMGo+pRGLU6XT6vF6vocBBj8gL+OvNZnOHDzsuuM5ccfyMzWa77/f7a4NFg3u32/0UkQPWRrFYvPwHkWvOYv3AEzcAAAAASUVORK5CYII=');
+}

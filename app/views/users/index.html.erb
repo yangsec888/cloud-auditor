@@ -1,0 +1,40 @@
+<div class="row">
+</div>
+<p><p>
+<div class="container">
+  <div class="row">
+    <%= render 'sub_menu' %>
+    <div class="pull-right col-md-6 col-lg-6">
+      <form class="form-inline form-group">
+        <%= hidden_field_tag :direction, params[:direction] %>
+        <%= hidden_field_tag :sort, params[:sort] %>
+        <%= select("department", "", @department_list, {}, {class: "form-control", id: "slt_2"}) %>
+          <button id="btn_1" class="btn btn-default" type="submit">Filter</button>
+          <span class="glyphicon glyphicon-filter"></span>
+          <% if params[:department].present? %>
+            <a href="/users"><span class="glyphicon glyphicon-remove"></span></a>
+          <% end %>
+      </form>
+    </div>
+  </div>
+  <br />
+    <div class="table-responsive">
+      <table class="table">
+        <tbody>
+          <th><%= sortable "username", "ID" %></th>
+          <th><%= sortable "email", "Email" %></th>
+          <th>Name</th>
+          <th>Department</th>
+          <th>Role Management</th>
+          <th>Log On Count</th>
+          <th>Remove</th>
+          <% @users.each do |user| %>
+            <tr>
+              <%= render user %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

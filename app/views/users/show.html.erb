@@ -1,0 +1,19 @@
+<h3>IDM User</h3>
+<br>
+
+<div class="container">
+  <div class="row">
+    <div class="column">
+      <table class="table">
+        <tbody>
+          <tr><td>Name:</td><td> <%= @user.username if @user.username %></td></tr>
+          <tr><td>Email:</td><td> <%= @user.email if @user.email %></td></tr>
+          <tr><td>Created:</td><td> <%= @user.created_at if @user.created_at %></td></tr>
+          <tr><td>Last Sign In:</td><td> <%= @user.last_sign_in_at if @user.last_sign_in_at %></td></tr>
+          <tr><td>Sign In Count:</td><td> <%= @user.sign_in_count if @user.sign_in_count %></td></tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+<%= form_with(model: aws_account, local: true) do |form| %>
+  <% if aws_account.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(aws_account.errors.count, "error") %> prohibited this aws_account from being saved:</h2>
+
+      <ul>
+      <% aws_account.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :acct_id %>
+    <%= form.number_field :acct_id %>
+  </div>
+
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div class="field">
+    <%= form.label :desc %>
+    <%= form.text_field :desc %>
+  </div>
+
+  <div class="field">
+    <%= form.label :bus_unit %>
+    <%= form.text_field :bus_unit %>
+  </div>
+
+  <div class="field">
+    <%= form.label :contact %>
+    <%= form.text_field :contact %>
+  </div>
+
+  <div class="field">
+    <%= form.label :created_at %>
+    <%= form.datetime_select :created_at %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

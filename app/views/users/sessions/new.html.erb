@@ -1,0 +1,34 @@
+<!-- client side validation for simple_form: http://stackoverflow.com/questions/18180392/ruby-on-rails-client-side-validation-simple-form-javascript-error -->
+<style>
+.centered{
+    margin: 0 auto;
+}
+</style>
+
+  <div class="centered text-center">
+
+    <%= form_for(resource, validate: true,  as: resource_name, url: session_path(resource_name)) do |f| %>
+    <div class="row">
+      <div class="col-xs-4">
+      </div>
+      <div class="form-group col-xs-4 text-left">
+        <!-- <input type="text" name="user[username]"  class="form-control" id="user_username" placeholder='User Name'> -->
+        <%= f.label :username %> <%= f.text_field :username, placeholder: "ID Only - No Prefix", class: "form-control"  %>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-4">
+      </div>
+      <div class="form-group col-xs-4 text-left">
+        <!--  <input type="password" name="user[password]" class="form-control" id="user_password"  placeholder='Password'> -->
+        <%= f.label :password %> <%= f.password_field :password, placeholder: "Password", class: "form-control"  %>
+
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-actions">
+        <%= f.submit "Log On", :class => 'btn btn-primary' %>
+      </div>
+    </div>
+    <% end %>
+  </div>

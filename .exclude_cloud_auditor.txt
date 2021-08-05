@@ -1,0 +1,7 @@
+.git
+.gitignore
+
+db/development.sqlite3
+.aws
+private
+public

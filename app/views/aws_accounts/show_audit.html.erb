@@ -1,0 +1,3436 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Scout Suite Report</title>
+
+    <!-- NCC favicon --> 
+    <link href="inc-scoutsuite/favicon.ico" rel="icon" type="image/x-icon">
+
+    <!-- Bootstrap core CSS -->
+    <link href="inc-bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap theme -->
+    <link id="bootstrap-theme" href="inc-bootstrap/css/bootstrap-light.min.css" rel="stylesheet">
+    
+    <!-- Fontawesome CSS -->
+    <link href="inc-fontawesome/css/all.min.css" rel="stylesheet">
+    <!-- Fallback fonts to solve CORS issue-->
+    <link href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- jQuery -->
+    <script src="inc-jquery/jquery-3.3.1.min.js"></script>
+
+    <!-- Handlebars -->
+    <script src="inc-handlebars/handlebars-v3.0.0.js"></script>
+
+    <!-- Scout -->
+    <script src="inc-scoutsuite/scoutsuite.js"></script>
+    <script src="inc-scoutsuite/pagination.js"></script>
+    <script src="inc-scoutsuite/provider.js"></script>
+    <script src="inc-scoutsuite/helpers.js"></script>
+    <link href="inc-scoutsuite/css/scoutsuite.css" rel="stylesheet">
+    <link id="scout-theme" href="inc-scoutsuite/css/scoutsuite-light.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <!------------------>
+    <!-- Fixed navbar -->
+    <!------------------>
+
+    <div class="navbar fixed-top navbar-expand-md bg-primary" role="navigation" id="metadata.list"></div>
+
+    <!--------------->
+    <!-- Container -->
+    <!--------------->
+
+    <div class="container theme-showcase mt-5 pt-5" id="container-user">
+
+        <!-- AWS account ID -->
+        <div class="row justify-content-center" id="account_id.details">
+            <h4>
+                <div class="list-group-item-text std-size" onclick="toggle_element('scout_display_account_id_on_all_pages_form')" >
+                    <span id="account_id"></span>
+                </div>
+                <div id="scout_display_account_id_on_all_pages_form" class="list-group-item-text center std-size" style="text-align: center; display: none">
+                    <label><input id="scout_display_account_id_on_all_pages" type="checkbox" value="">Display account ID on all pages</label>
+                </div>
+            </h4>
+        </div>
+
+        <!-- Title section -->
+        <!--<div id="section_title-div">-->
+        <div id="section_title-div" style="display:flex;flex-direction:column;position:relative;">
+            <h2 id="section_title-h2"></h2>
+            <div id="findings_download_button" style="display:none;position:relative;margin-left:auto">
+                <button id="findings_download_csv_button" type="button" class="btn btn-secondary"><i class="fa fa-download"></i>CSV</button>
+                <button id="findings_download_json_button" type="button" class="btn btn-secondary"><i class="fa fa-download"></i>JSON</button>
+            </div>
+        </div>
+
+        <!-- One column container -->
+        <div class="row">
+            <div class="col-sm-12 w-100" id="single-column">
+            </div>
+
+            <!-- Two columns container -->
+            <div class="row w-100">
+                <div class="col-sm-3 w-100 text-overflow" id="double-column-left"></div>
+                <div class="col-sm-9 w-100 pr-0" id="double-column-right"></div>
+            </div>
+
+            <!-- Element to notify Scout Suite that we are reading a report in json format -->
+<script id="json_format" type="text/x-handlebars-template"></script>
+<script>
+    Handlebars.registerPartial("json_format", document.getElementById("json_format").innerHTML);
+</script>
+
+<!-- Results that need to be read from js files -->
+<script src="scoutsuite-results/scoutsuite_results_aws-auditor.js"></script>
+<script src="scoutsuite-results/scoutsuite_exceptions_aws-auditor.js"></script>
+<script id="about_scoutsuite-template" type="text/x-handlebars-template">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">About Scout Suite</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body m-3">
+                <div>
+                    <p>Scout Suite is an open-source tool released by <a href="https://www.nccgroup.trust" rel="author" target="_blank">NCC Group</a>.</p>
+                    <p>Use the top navigation bar to review the configuration of the supported cloud provider services.</p>
+                    <p>
+                        For more information about Scout Suite, please check out the project's page on
+                        <a href="https://github.com/nccgroup/ScoutSuite" target="_blank">GitHub</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script>
+    var about_scoutsuite_template = Handlebars.compile($("#about_scoutsuite-template").html());
+</script><!-- Accordion partial -->
+<script id="accordion.partial" type="text/x-handlebars-template">
+        <div class="accordion">
+            <h4 class="list-group-item-heading accordion-heading">
+                {{#if title_partial}}
+                    {{> (lookup . 'title_partial') item = this}}
+                {{else}}
+                    {{#if title}}
+                        {{title}}
+                    {{/if}}
+                {{/if}}
+                {{> count_badge count=items.length target=(concat '#' (escape_dots accordion_id))}}
+            </h4>
+            <div id="{{accordion_id}}" class="accordion-body collapse">
+                <div class="accordion-inner">
+                    <ul class="no-bullet">
+                        {{#each items}}
+                            <li>
+                                {{#if ../item_partial}}
+                                    {{> (lookup ../.. 'item_partial') region = ../../region vpc = ../../vpc item = this}}
+                                {{else}}
+                                    {{this}}
+                                {{/if}}
+                            </li>
+                        {{/each}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+</script>
+<script>
+    Handlebars.registerPartial("accordion", $("#accordion\\.partial").html());
+</script>
+    <!-- Policy partial -->
+    <script id="accordion_policy.partial" type="text/x-handlebars-template">
+      <div class="accordion">
+          <{{#if heading}}{{heading}}{{else}}h4{{/if}} class="list-group-item-heading accordion-heading">{{#samp}}<samp>{{/samp}}{{name}}{{#samp}}</samp>{{/samp}}
+              <a class="accordion-toggle collapsed" data-toggle="collapse" href="#{{escape_dots policy_path}}">
+                  <span class="badge float-right btn-info">Details</span>
+              </a>
+          </{{#if heading}}{{heading}}{{else}}h4{{/if}}>
+        <div id="{{policy_path}}" class="accordion-body item-margin collapse">
+          <div class="accordion-inner">
+              <code>
+                  {{> policy}}
+              </code>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("accordion_policy", $("#accordion_policy\\.partial").html());
+    </script>
+<script id="count_badge.partial" type="text/x-handlebars-template">
+    {{#ifPositive count}}
+        <span class="badge float-right badge-dark">{{count}}</span>
+    {{else}}
+        <span class="badge float-right badge-light disabled">0</span>
+    {{/ifPositive}}
+</script>
+
+<script>
+    Handlebars.registerPartial("count_badge", $("#count_badge\\.partial").html());
+</script><!-- Dashboard partial -->
+<script id="services.id.findings.partial" type="text/x-handlebars-template">
+<div class="row" id="services.{{service_name}}.findings.row">
+    <div class="col-sm-12" id="services.{{service_name}}.findings.list">
+        <div class="form-group container row">
+        <div class="col-sm-4">
+            <input class="form-control dashboard-filter" type="text" id="dashboardFilter" placeholder="Filter findings">
+        </div>
+        <div class="col-sm-2">
+            <button class="form-control btn btn-light" id="finding-title">Show All</button>
+        </div>
+        <div class="col-sm-2">
+            <button class="form-control btn btn-success" id="finding-title-good">Good</button>
+        </div>
+        <div class="col-sm-2">
+            <button class="form-control btn btn-warning" id="finding-title-warning">Warning</button>
+        </div>
+        <div class="col-sm-2">
+            <button class="form-control btn btn-danger" id="finding-title-danger">Danger</button>
+        </div>
+        </div>
+
+        <ul class="list-group accordion">
+            {{#each_dict_as_sorted_list findings}}
+                <div id="list-{{key}}" class="card finding_items">
+                <div class="card-header row finding-title finding-title-{{dashboard_color level checked_items flagged_items}} plain-link">
+                    <div class="col-sm-11">
+                        <i class="fa finding-badge finding-badge-{{dashboard_color level checked_items flagged_items}}"></i>
+                        <a href="#services.{{../service_name}}.findings.{{key}}.items">{{description}}</a>
+                    </div>
+                    <div class="col-sm-1">
+                        <button class="finding btn fa collapsed" style="background-color:transparent" data-toggle="collapse" data-target="#item-{{key}}" aria-expanded="false" aria-controls="item-{{key}}"></button>
+                    </div>
+                </div>
+                <div class="collapse" id="item-{{key}}" aria-labelledby="item-{{key}}" data-parent="#list-{{key}}">
+                    <div class="card-body row">
+                        <div class="col-sm-9">
+                            <p>{{{rationale}}}</p>
+                        </div>
+                        <div class="col-sm-3">
+                            <ul>
+                                <li>{{dashboard_name}} checked: {{checked_items}}</li>
+                                <li>{{dashboard_name}} flagged: {{flagged_items}}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/each_dict_as_sorted_list}}
+        </ul>
+
+    </div>
+</div>
+</script>
+<script>
+Handlebars.registerPartial("dashboard", $("#services\\.id\\.findings\\.partial").html());
+</script>
+<script>
+    // Dashboard filtering
+    $(document).ready(function(){
+        // Filter by text search
+        $(".dashboard-filter").on("keyup", function() {
+            var value = $(this).val().toLowerCase()
+            $(".finding_items").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            })
+        })
+
+        // Filter by button
+        $('.btn').click(function() {
+            var value = $(this).attr('id')
+            if (value.indexOf('finding-title') > -1){
+                $(".finding_items").filter(function() {
+                    $(this).toggle($(this).find(">:first-child").attr("class").indexOf(value) > -1)
+                });
+            }
+            $(".dashboard-filter").val("")
+        })
+    })
+</script>
+
+  <!-- Generic partial for resource -->
+  <script id="details.partial" type="text/x-handlebars-template">
+    <div id="services.{{service_name}}.{{resource_type}}.details">
+      {{#each items}}
+        <div class="list-group" id="services.{{../service_name}}.{{../resource_type}}.{{@key}}.view">
+          {{> (lookup .. 'partial_name') service_name = ../service_name resource_type = ../resource_type resource_key = @key resource = this}}
+        </div>
+      {{/each}}
+    </div>
+  </script>
+  <script>
+    Handlebars.registerPartial("details", $("#details\\.partial").html());
+  </script>
+
+
+  <!-- Generic partial for region-then-resource -->
+  <script id="details_for_region.partial" type="text/x-handlebars-template">
+    <div id="services.{{service_name}}.regions.id.{{resource_type}}.details">
+      {{#each items}}
+        {{#each (lookup . ../resource_type)}}
+          <div class="list-group" id="services.{{../../service_name}}.regions.{{@../key}}.{{../../resource_type}}.{{@key}}.view">
+            {{> (lookup ../.. 'partial_name') service_name = ../../service_name region = @../key resource_type = ../../resource_type resource_key = @key resource = this}}
+          </div>
+        {{/each}}
+      {{/each}}
+    </div>
+  </script>
+  <script>
+    Handlebars.registerPartial("details_for_region", $("#details_for_region\\.partial").html());
+  </script>
+
+
+  <!-- Generic partial for region-then-vpc-then-resource -->
+  <script id="details_for_vpc.partial" type="text/x-handlebars-template">
+    <div id="services.{{service_name}}.regions.id.vpcs.id.{{resource_type}}.details">
+      {{#each items}}
+        {{#each vpcs}}
+          {{#each (lookup . ../../resource_type)}}
+            <div class="list-group" id="services.{{../../../service_name}}.regions.{{@../../key}}.vpcs.{{@../key}}.{{../../../resource_type}}.{{@key}}.view">
+              {{> (lookup ../../.. 'partial_name') service_name = ../../../service_name region = @../../key vpc = @../key resource_type = ../../../resource_type resource_key = @key resource = this}}
+            </div>
+          {{/each}}
+        {{/each}}
+      {{/each}}
+    </div>
+  </script>
+  <script>
+    Handlebars.registerPartial("details_for_vpc", $("#details_for_vpc\\.partial").html());
+  </script>
+
+
+    <!-- EC2 grant -->
+    <script id="ec2_grants.partial" type="text/x-handlebars-template">
+      <ul>
+        {{#each items}}
+          <li class="list-group-item-text">
+            <span id="ec2.regions.{{../region}}.vpcs.{{../vpc}}.security_groups.{{../sg_id}}.rules.{{../direction}}.protocols.{{../protocol}}.ports.{{../ports}}.security_groups.{{@key}}">
+              {{#if GroupName}}
+                {{GroupName}} (<a href="javascript:findAndShowEC2Object('regions.vpcs.security_groups', '{{GroupId}}')">{{GroupId}}</a>)
+              {{else}}
+                {{GroupId}} (AWS account ID {{UserId}})
+              {{/if}}
+            </span>
+          </li>
+        {{/each}}
+      </ul>
+    </script>
+    <script>
+        Handlebars.registerPartial("ec2_grants", $("#ec2_grants\\.partial").html());
+    </script>
+
+<!-- Filters -->
+<script id="filters.list.template" type="text/x-handlebars-template">
+  {{#each items}}
+    {{#each filters}}   
+      <li id="services.{{display_path}}.filters"><a class="dropdown-item" href="#services.{{@../key}}.filters.{{@key}}.items">{{description}}</a></li>
+    {{/each}}
+  {{/each}}
+</script>
+
+    <!-- Generic object partial -->
+    <script id="generic_object.partial" type="text/x-handlebars-template">
+        <ul>
+            {{#each this}}
+                <li class="list-group-item-text no-margin">{{@key}}:
+                {{#ifType this 'object'}}
+                    {{> generic_object this}}
+                {{else}}
+                    {{this}}
+                {{/ifType}}
+                </li>
+            {{/each}}
+        </ul>
+    </script>
+    <script>
+      Handlebars.registerPartial("generic_object", $("#generic_object\\.partial").html());
+    </script>
+
+
+    <!-- IP grant -->
+    <script id="ip_grants.partial" type="text/x-handlebars-template">
+      <ul>
+        {{#each items}}
+            <li class="list-group-item-text">
+                {{#if ../span_id_prefix}}
+                    <span id="{{../../span_id_prefix}}.{{@key}}.CIDR">
+                {{/if}}
+                {{CIDR}} {{#if CIDRName}}({{CIDRName}}){{/if}}
+                {{#if ../span_id_prefix}}
+                    </span>
+                {{/if}}
+            </li>
+        {{/each}}
+      </ul>
+    </script>
+    <script>
+        Handlebars.registerPartial("ip_grants", $("#ip_grants\\.partial").html());
+    </script>
+
+<script id="last_run_details-template" type="text/x-handlebars-template">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Execution Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body m-3">
+                <div>
+                    <p><strong>Provider:</strong> {{provider_name}}</p>
+                    <p><strong>Time:</strong> {{format_date last_run.time}}</p>
+                    {{#if last_run.run_parameters.services}}
+                    <p><strong>Services:</strong> {{last_run.run_parameters.services}}</p>
+                    {{/if}}
+                    {{#if last_run.run_parameters.skipped_services}}
+                    <p><strong>Skipped Services:</strong> {{last_run.run_parameters.skipped_services}}</p>
+                    {{/if}}
+                    {{#if last_run.run_parameters.regions}}
+                    <p><strong>Regions:</strong> {{last_run.run_parameters.regions}}</p>
+                    {{/if}}
+                    <p><strong>Report generated with</strong> Scout Suite version <samp>{{last_run.version}}</samp></p>
+                    <p><strong>Using ruleset</strong> <samp>{{last_run.ruleset_name}}</samp>:
+                    <p class="ml-4 mr-4 text-justify"><em>{{last_run.ruleset_about}}</em></p>
+                </div>
+        </div>
+    </div>
+</script>
+
+<script>
+    var last_run_details_template = Handlebars.compile($("#last_run_details-template").html());
+</script><!-- Generic left-menu link partial for resources -->
+<script id="left_menu.partial" type="text/x-handlebars-template">
+  <div id="services.{{service_name}}.{{resource_type}}.list">
+    <div class="list-group" >
+      <div class="list-group-item">
+        <a href="#services.{{service_name}}.{{resource_type}}">Show all <span class="badge float-right">{{items.length}}</span></a>
+      </div>
+    </div>
+    <div class="list-group">
+      {{#each items}}
+      <div class="list-group-item" id="services.{{../service_name}}.{{../resource_type}}.{{id}}.link">
+        <a href="#services.{{../service_name}}.{{../resource_type}}.{{id}}.view">{{name}}</a>
+      </div>
+      {{/each}}
+    </div>
+</script>
+<script>
+    Handlebars.registerPartial("left_menu", $("#left_menu\\.partial").html());
+</script>
+
+<!-- Per Service Type navigation bar -->
+<script id="metadata.list.template" type="text/x-handlebars-template">
+      <div class="container">
+        <div class="navbar-header">
+          <span class="navbar-brand"><a id="scoutsuite_navbar" class="text-white" href="javascript:showMainDashboard()">Scout Suite</a></span>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                {{#each items}}
+                <li id="{{@key}}_navbar" class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" role="button" data-toggle="dropdown">{{makeTitle @key}}</a>
+                    <ul class="dropdown-menu" role="button">
+                        {{#if summaries}}
+                            <li class="dropdown-submenu">
+                                <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">Summaries</a>
+                                <ul class="dropdown-menu">
+                                    {{#each summaries}}
+                                    <li><a class="dropdown-item nav-link" href="#{{path}}" id="{{@key}}_subnavbar">{{makeTitle @key}}</a></li>
+                                    {{/each}}
+                                </ul>
+                                <div class="dropdown-divider"></div>
+                            </li>
+                        {{/if}} 
+
+                        {{#each this}} {{#unlessEqual @key 'summaries'}} {{#unless hidden}}
+                            <li class="dropdown-submenu">
+                                <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">{{ makeTitle @key }}</a>
+                                <ul class="dropdown-menu">
+                                    <li class="dropdown-header">Summaries</li>
+                                    <li><a class="dropdown-item" href="#services.{{@key}}.findings" id="{{@key}}_subnavbar">Dashboard</a></li>
+                                    {{#each summaries}} {{#if risks}}
+                                        <li class="dropdown-submenu"><a href="#{{path}}" id="{{@key}}_subnavbar">{{makeTitle @key}}</a>
+                                            <ul class="dropdown-menu">
+                                                <li class="dropdown-header">Security risks</li>
+                                                {{#each risks}}
+                                                <li><a class="dropdown-item" href="#services.{{@../../key}}.findings.{{this}}.items" id="{{@key}}_subnavbar">
+                                                    {{getValueAt 'services' @../../key 'findings' this 'description'}}
+                                                </a></li>
+                                                {{/each}}
+                                            </ul>
+                                        </li>
+                                    {{else}}
+                                        <li><a class="dropdown-item" href="#{{path}}" id="{{@key}}_subnavbar">{{makeTitle @key}}</a></li>
+                                    {{/if}} {{/each}}
+
+                                    <li class="dropdown-divider"></li>
+                                    <li class="dropdown-header">{{makeTitle @key}} config</li>
+                                    {{#each resources}} {{#unless hidden}} {{#if risks}}
+                                        <li class="dropdown-submenu"><a href="#{{path}}" id="{{@key}}_subnavbar">{{makeTitle @key}} ({{count}})</a>
+                                            <ul class="dropdown-menu">
+                                                <li class="dropdown-header">Security risks</li>
+                                                {{#each risks}}
+                                                <li><a class="dropdown-item" href="#services.{{@../../key}}.findings.{{this}}.items" id="{{@key}}_subnavbar">
+                                                    {{getValueAt 'services' @../../key 'findings' this 'description'}}
+                                                </a></li>
+                                                {{/each}}
+                                            </ul>
+                                        </li>
+                                    {{else}} {{#if count}}
+                                        <li><a class="dropdown-item" href="#{{path}}" id="{{@key}}_subnavbar">{{makeTitle @key}} ({{count}})</a></li>
+                                    {{else}}
+                                        <li class="disabled"><a class="dropdown-item disabled" href="">{{makeTitle @key}}</a></li>
+                                    {{/if}} {{/if}} {{/unless}} {{/each}}
+                                </ul>
+                            </li>
+                        {{/unless}} {{/unlessEqual}} {{/each}}
+                    </ul>
+                </li>
+                {{/each}}
+            </ul>
+
+            <ul class="nav navbar-nav ml-auto">
+              <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Filters</a>
+                <ul class="dropdown-menu" id="filters.list">
+                </ul>
+              </li>
+              <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-cog"></i></a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="javascript:showLastRunDetails()">Execution Details</a></li>
+                  <li><a class="dropdown-item" href="javascript:showResourcesDetails()">Resources Details</a></li>
+                  <li><a class="dropdown-item" href="javascript:showAbout()">About Scout Suite</a></li>
+                  <li><a class="dropdown-item" href="javascript:downloadExceptions()">Export Exceptions</a><a id="downloadAnchorElem" style="display:none"></a></li>
+                  <li><span>Dark theme</span>
+                    <label class="switch">
+                      <input type="checkbox" id="theme_checkbox" onclick="toggleTheme()">
+                      <span class="slider round"></span>
+                    </label></a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+      </div>
+  </script>
+
+<script src="inc-scoutsuite/theme.js"></script>
+<script>
+    loadLastTheme();
+    if (isDarkThemeEnabled() && document.getElementById("theme_checkbox")) {
+        document.getElementById("theme_checkbox").checked = true;
+    }
+</script><script id="modal-template" type="text/x-handlebars-template">
+    {{#if name}}
+    <style>
+        .modal-dialog #resource-name { display: none; }        
+    </style>
+    {{/if}}
+
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{name}}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {{> (lookup . 'template') }}
+            </div>
+        </div>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("modal-template", $("#modal-template").html());
+</script><!-- Network interface partial -->
+<script id="network_interface.partial" type="text/x-handlebars-template" xmlns="http://www.w3.org/1999/html">
+  <div class="accordion">
+          <h5 class="list-group-item-heading accordion-heading"><samp>{{@key}}</samp>
+          <a class="accordion-toggle collapsed" data-toggle="collapse" href="#{{escape_dots (concat 'ec2.regions' region 'vpcs' vpc 'instances' instance_id 'network_interfaces' network_interface)}}">
+              <span class="badge float-right btn-info">Details</span>
+          </a>
+          </h5>
+      <div id="{{concat 'ec2.regions' region 'vpcs' vpc 'instances' instance_id 'network_interfaces' network_interface}}" class="accordion-body item-margin collapse">
+          <div class="accordion-inner">
+              <ul>
+                  {{#if Description}}<li class="list-group-item-text no-margin">Description: {{Description}}</li>{{/if}}
+                  {{#if Association}}
+                  <li class="list-group-item-text no-margin">Public IP: {{Association.PublicIp}}</li>
+                  {{#if Association.PublicDnsName}}<li class="list-group-item-text no-margin">Public DNS: {{Association.PublicDnsName}}</li>{{/if}}
+                  {{/if}}
+                  {{#if Ipv6Addresses}}
+                  <li class="list-group-item-text no-margin">IPv6 addresses:</li>
+                  <ul>
+                      {{#each Ipv6Addresses}}
+                      <li class="list-group-item-text">{{Ipv6Address}}</li>
+                      {{/each}}
+                  </ul>
+                  {{/if}}
+                  {{#each PrivateIpAddresses}}
+                  <li class="list-group-item-text no-margin">{{#if Primary}}Primary {{/if}}Private IP: {{PrivateIpAddress}}</li>
+                  {{/each}}
+                  <li class="list-group-item-text no-margin">Security groups:
+                      <ul>
+                          {{#each Groups}}
+                          <li><a href="javascript:showObject('services.ec2.regions.{{../region}}.vpcs.{{../vpc}}.security_groups.{{GroupId}}')">{{GroupName}}</a></li>
+                          {{/each}}
+                      </ul>
+                  </li>
+              </ul>
+          </div>
+      </div>
+  </div>
+</script>
+
+<script>
+  Handlebars.registerPartial("network_interface", $("#network_interface\\.partial").html());
+</script>
+
+<!-- Single instance template -->
+<script id="single_network_interface-template" type="text/x-handlebars-template">
+    {{> modal-template template='network_interface' name=network_interface}}
+</script>
+
+<script>
+  var single_ec2_network_interface_template = Handlebars.compile($("#single_network_interface-template").html());
+</script>    <!-- Policy partial -->
+    <script id="policy.partial" type="text/x-handlebars-template">
+      {{#each document}}
+          {{#ifEqual @key "Statement"}}
+            &nbsp;&nbsp;"{{@key}}":&nbsp; [<br/>
+            {{#each this}}
+              <div class="item-margin">
+                <span id="{{../../../policy_path}}.Statement.{{@key}}">{{{displayKey @key this}}}</span>
+                {{#unless @last}},{{/unless}}
+              </div>
+            {{/each}}                  
+            &nbsp;&nbsp;]
+          {{else}}
+            &nbsp;&nbsp;"{{@key}}":&nbsp; {{{displayKey @key this}}}
+          {{/ifEqual}}
+          {{#unless @last}},{{/unless}}
+          <br/>
+      {{/each}}
+    </script>
+    <script>
+      Handlebars.registerPartial("policy", $("#policy\\.partial").html());
+    </script>
+    <!-- Generic link to other resources -->
+    <script id="resource_link.partial" type="text/x-handlebars-template">
+        <a href="javascript:showObject('{{resource_path}}')">
+            {{getValueAt resource_path 'name'}}
+        </a>
+    </script>
+    <script>
+        Handlebars.registerPartial("resource_link", $("#resource_link\\.partial").html());
+    </script><script id="resources_details-template" type="text/x-handlebars-template">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resources Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body m-3">
+                <div>
+                    <table class="table">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Service</th>
+                            <th scope="col">Resource</th>
+                            <th scope="col">#</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{#each metadata}}
+                            {{#each this}}
+                                {{#each this.resources}}
+                                    <tr>
+                                        {{#if this.count}}
+                                            <th>{{makeTitle @../key}}</th>
+                                            <th>{{makeTitle @key}}</th>
+                                            <th>{{this.count}}</th>
+                                        {{/if}}
+                                    </tr>
+                                {{/each}}
+                            {{/each}}
+                        {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+</script>
+
+<script>
+    var resources_details_template = Handlebars.compile($("#resources_details-template").html());
+</script>
+
+<!-- Single Redshift cluster template -->
+<script id="single_redshift_cluster-template" type="text/x-handlebars-template">
+    {{> modal-template template='redshift_cluster'}}
+</script>
+<script>
+    var single_redshift_cluster_template = Handlebars.compile($("#single_redshift_cluster-template").html());
+</script>
+
+<!-- Generic left-menu link partial for region-then-resource -->
+<script id="left_menu_for_region.partial" type="text/x-handlebars-template">
+  <div id="services.{{service_name}}.regions.id.{{resource_type}}.list">
+    <div class="list-group" >
+      <div class="list-group-item">
+        <a href="javascript:updateHash('services.{{service_name}}.regions.id.{{resource_type}}')">
+            Show all <span class="badge float-right btn-info">{{getValueAt 'metadata' service_group service_name 'resources' resource_type 'count'}}</span>
+        </a>
+      </div>
+    </div>
+    {{#each items}}
+    <div class="list-group" id="services.{{../service_name}}.regions.{{@key}}.{{../resource_type}}.list">
+      <div class="list-group-item active">
+        <a href="#services.{{../service_name}}.regions.{{@key}}.{{../resource_type}}">{{@key}}</a>
+        <span class="float-right"><a href="javascript:hideList('services.{{../service_name}}.regions.{{@key}}.{{../resource_type}}.list')"><i class="fa fa-times-circle"></i></a></span>
+      </div>
+      <div class="list-group-item list-sub-element">
+        {{#each (lookup . ../resource_type)}}
+        <div class="list-group-item-text" id="services.{{../../service_name}}.regions.{{@../key}}.{{../../resource_type}}.{{@key}}.link">
+          {{#if scout_link}}
+          <a href="#{{scout_link}}.view">{{name}}</a>
+          {{else}}
+          <a href="#services.{{../../../service_name}}.regions.{{@../key}}.{{../../../resource_type}}.{{@key}}.view">{{name}}</a>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+    </div>
+    {{/each}}
+  </div>
+</script>
+<script>
+    Handlebars.registerPartial("left_menu_for_region", $("#left_menu_for_region\\.partial").html());
+</script>
+<!-- Generic left-menu link partial for region-then-vpc-then-resource -->
+<script id="left_menu_for_vpc.partial" type="text/x-handlebars-template">
+  <div id="services.{{service_name}}.regions.id.vpcs.id.{{resource_type}}.list">
+    <div class="list-group" >
+      <div class="list-group-item">
+        <a href="javascript:updateHash('services.{{service_name}}.regions.id.vpcs.id.{{resource_type}}')">
+            Show all <span class="badge float-right btn-info">{{getValueAt 'metadata' service_group service_name 'resources' resource_type 'count'}}</span>
+        </a>
+      </div>
+    </div>
+    {{#each items}}
+    <div class="list-group" id="services.{{../service_name}}.regions.{{@key}}.vpcs.id.{{../resource_type}}.list">
+      <div class="list-group-item active">
+        <a href="#services.{{../service_name}}.regions.{{@key}}.vpcs.id.{{../resource_type}}">{{@key}}</a>
+        <span class="float-right"><a href="javascript:hideList('services.{{../service_name}}.regions.{{@key}}.vpcs.id.{{../resource_type}}.list')"><i class="fa fa-times-circle"></i></a></span>
+      </div>
+      {{#each vpcs}}
+      <div class="list-group-item list-sub-element" id="services.{{../../service_name}}.regions.{{@../key}}.vpcs.{{@key}}.{{../../resource_type}}.list">
+        <a href="#services.{{../../service_name}}.regions.{{@../key}}.vpcs.{{@key}}.{{../../resource_type}}">{{getValueAt 'services.vpc.regions' @../key 'vpcs' @key 'name'}}</a>
+        {{#each (lookup . ../../resource_type)}}
+        <div class="list-group-item-text list-sub-element" id="services.{{../../../service_name}}.regions.{{@../../key}}.vpcs.{{@../key}}.{{../../../resource_type}}.{{@key}}.link">
+          <a href="#services.{{../../../service_name}}.regions.{{@../../key}}.vpcs.{{@../key}}.{{../../../resource_type}}.{{@key}}.view">{{name}}</a>
+        </div>
+        {{/each}}
+      </div>
+      {{/each}}
+    </div>
+    {{/each}}
+  </div>
+</script>
+<script>
+    Handlebars.registerPartial("left_menu_for_vpc", $("#left_menu_for_vpc\\.partial").html());
+</script>
+
+
+<!-- acm certificates -->
+<script id="services.acm.regions.id.certificates.partial" type="text/x-handlebars-template">
+	<div id="resource-name" class="list-group-item active">
+		<h4 class="list-group-item-heading">{{name}}</h4>
+	</div>
+	<div class="list-group-item">
+		<h4 class="list-group-item-heading">Information</h4>
+		<div class="list-group-item-text item-margin">ARN: <span id="acm.regions.{{region}}.certificates.{{@key}}.CertificateArn"><samp>{{value_or_none CertificateArn}}</samp></span></div>
+		<div class="list-group-item-text item-margin">Domain Name: <span id="acm.regions.{{region}}.certificates.{{@key}}.DomainName"><samp>{{value_or_none DomainName}}</samp></span></div>
+		<div class="list-group-item-text item-margin">Subject: <span id="acm.regions.{{region}}.certificates.{{@key}}.Subject"><samp>{{value_or_none Subject}}</samp></span></div>
+		<div class="list-group-item-text item-margin">
+			Subject Alternative Names:
+			<span id="acm.regions.{{region}}.certificates.{{@key}}.SubjectAlternativeNames">
+				<ul>
+					{{#each SubjectAlternativeNames}}
+					<li class="list-group-item-text"><samp>{{this}}</samp></li>
+					{{/each}}
+				</ul>
+			</span>
+		</div>
+		<div class="list-group-item-text item-margin">Status: <span id="acm.regions.{{region}}.certificates.{{@key}}.Status"><samp>{{value_or_none Status}}</samp></span></div>
+		<div class="list-group-item-text item-margin">Issuer: <span id="acm.regions.{{region}}.certificates.{{@key}}.Issuer"><samp>{{value_or_none Issuer}}</samp></span></div>
+		<div class="list-group-item-text item-margin">Type: <span id="acm.regions.{{region}}.certificates.{{@key}}.Type"><samp>{{value_or_none Type}}</samp></span></div>
+		<div class="list-group-item-text item-margin">Created: <span id="acm.regions.{{region}}.certificates.{{@key}}.CreatedAt">{{format_date CreatedAt}}</span></div>
+		<div class="list-group-item-text item-margin">Expiration: <span id="acm.regions.{{region}}.certificates.{{@key}}.NotAfter">{{format_date NotAfter}}</span></div>
+		<div class="list-group-item-text item-margin">Renewal Eligibility: <span id="acm.regions.{{region}}.certificates.{{@key}}.RenewalEligibility"><samp>{{value_or_none RenewalEligibility}}</samp></span></div>
+		<div class="list-group-item-text item-margin">Transparency Logging Preference: <span id="acm.regions.{{region}}.certificates.{{@key}}.CertificateTransparencyLoggingPreference"><samp>{{value_or_none Options.CertificateTransparencyLoggingPreference}}</samp></span></div>
+
+		<h4 class="list-group-item-heading">Validation</h4>
+		<div class="list-group-item-text item-margin">Domain Validation Options:
+			<span id="acm.regions.{{region}}.certificates.{{@key}}.DomainValidationOptions">
+				<ul>
+					{{#each DomainValidationOptions}}
+					<li class="list-group-item-text"><samp>{{DomainName}} - {{ValidationDomain}} - {{ValidationMethod}} - {{ValidationStatus}}</samp></li>
+					{{/each}}
+				</ul>
+			</span>
+		</div>
+
+		<h4 class="list-group-item-heading">Keys</h4>
+		<div class="list-group-item-text item-margin">Key Algorithm: <span id="acm.regions.{{region}}.certificates.{{@key}}.KeyAlgorithm"><samp>{{value_or_none KeyAlgorithm}}</samp></span></div>
+		<div class="list-group-item-text item-margin">Signature Algorithm: <span id="acm.regions.{{region}}.certificates.{{@key}}.SignatureAlgorithm"><samp>{{value_or_none SignatureAlgorithm}}</samp></span></div>
+		<div class="list-group-item-text item-margin">
+			Key Usages:
+			<span id="acm.regions.{{region}}.certificates.{{@key}}.KeyUsages">
+				<ul>
+				{{#each KeyUsages}}
+						<li class="list-group-item-text"><samp>{{Name}}</samp></li>
+				{{else}}
+						<li class="list-group-item-text"><samp>None</samp></li>
+				{{/each}}
+				</ul>
+			</span>
+		</div>
+		<div class="list-group-item-text item-margin">Extended Key Usages:
+			<span id="acm.regions.{{region}}.certificates.{{@key}}.ExtendedKeyUsages">
+				<ul>
+				{{#each KeyUsages}}
+						<li class="list-group-item-text"><samp>{{Name}} - {{OID}}</samp></li>
+				{{else}}
+						<li class="list-group-item-text"><samp>None</samp></li>
+				{{/each}}
+				</ul>
+			</span>
+		</div>
+		<div class="list-group-item-text item-margin">In Use By:
+			<span id="acm.regions.{{region}}.certificates.{{@key}}.InUseBy">
+				<ul>
+				{{#each InUseBys}}
+					<li class="list-group-item-text"><samp>{{this}}</samp></li>
+				{{else}}
+					<li class="list-group-item-text"><samp>None</samp></li>
+				{{/each}}
+				</ul>
+			</span>
+		</div>
+
+	</div>
+</script>
+
+<script>
+	Handlebars.registerPartial("services.acm.regions.id.certificates", $("#services\\.acm\\.regions\\.id\\.certificates\\.partial").html());
+</script>
+
+<!-- Single acm certificate template -->
+<script id="single_acm_certificate-template" type="text/x-handlebars-template">
+	{{> modal-template template='services.acm.regions.id.certificates'}}
+</script>
+<script>
+	var single_acm_certificate_template = Handlebars.compile($("#single_acm_certificate-template").html());
+</script>
+
+
+<!-- Lambda function partial -->
+<script id="services.awslambda.regions.id.functions.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <div class="list-group-item-text item-margin">Description: <span id="awslambda.regions.{{region}}.functions.{{@key}}.description"><samp>{{value_or_none description}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Role: <span id="awslambda.regions.{{region}}.functions.{{@key}}.role"><samp>{{value_or_none role}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Last Modified: <span id="awslambda.regions.{{region}}.functions.{{@key}}.last_modified"><samp>{{format_date last_modified}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Runtime: <span id="awslambda.regions.{{region}}.functions.{{@key}}.runtime"><samp>{{value_or_none runtime}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Version: <span id="awslambda.regions.{{region}}.functions.{{@key}}.version"><samp>{{value_or_none version}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Revision ID: <span id="awslambda.regions.{{region}}.functions.{{@key}}.revision_id"><samp>{{value_or_none revision_id}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Code Sha256: <span id="awslambda.regions.{{region}}.functions.{{@key}}.code_sha256"><samp>{{value_or_none code_sha256}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Handler: <span id="awslambda.regions.{{region}}.functions.{{@key}}.handler"><samp>{{value_or_none handler}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Code Size: <span id="awslambda.regions.{{region}}.functions.{{@key}}.code_size"><samp>{{value_or_none code_size}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Memory Size: <span id="awslambda.regions.{{region}}.functions.{{@key}}.memory_size"><samp>{{value_or_none memory_size}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Timeout: <span id="awslambda.regions.{{region}}.functions.{{@key}}.timeout"><samp>{{value_or_none timeout}}</samp></span></div>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("services.awslambda.regions.id.functions", $("#services\\.awslambda\\.regions\\.id\\.functions\\.partial").html());
+</script>
+
+<!-- Single awslambda function template -->
+<script id="single_awslambda_function-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.awslambda.regions.id.functions'}}
+</script>
+<script>
+    var single_awslambda_function_template = Handlebars.compile($("#single_awslambda_function-template").html());
+</script>
+<!-- CloudFormation stack partial -->
+<script id="services.cloudformation.regions.id.stacks.partial" type="text/x-handlebars-template">
+  <div id="resource-name" class="list-group-item active">
+    <h4 class="list-group-item-heading">{{name}}</h4>
+  </div>
+  <div class="list-group-item">
+    <h4 class="list-group-item-heading">Description</h4>
+    <div class="list-group-item-text item-margin">{{Description}}</div>
+  </div>
+  <div class="list-group-item">
+    <h4 class="list-group-item-heading">Information</h4>
+    <div class="list-group-item-text item-margin">Region: {{region}}</div>
+    <div class="list-group-item-text item-margin">Created on: {{CreationTime}}</div>
+    <div class="list-group-item-text item-margin" id="">Role:
+      {{#if iam_role}}
+        <a href="javascript:showObject('services.iam.roles.{{iam_role.id}}')">{{iam_role.name}}</a>
+        <span id="cloudformation.regions.{{region}}.stacks.{{name}}"><i class="fa fa-exclamation-triangle"></i></span>
+      {{else}}
+        None
+      {{/if}}
+    </div>
+    <div class="list-group-item-text item-margin">Termination protection enabled: <span id="cloudformation.regions.{{region}}.stacks.{{@key}}.cloudformation_stack_no_termination_protection">{{EnableTerminationProtection}}</span></div>
+    <div class="list-group-item-text item-margin">Configuration has drifted: <span id="cloudformation.regions.{{region}}.stacks.{{@key}}.cloudformation_stack_drifted">{{drifted}}</span></div>
+    <div class="list-group-item-text item-margin">Deletion policy: <span id="cloudformation.regions.{{region}}.stacks.{{@key}}.cloudformation_stack_no_deletion_policy">{{deletion_policy}}</span></div>
+  </div>
+  <div class="list-group-item">
+    <h4 class="list-group-item-heading">Capabilities {{> count_badge count=Capabilities.length}}</h4>
+    <ul>
+      {{#each Capabilities}}
+        <li class="list-group-item-text">
+          {{this}}
+        </li>
+      {{/each}}
+    </ul>
+  </div>
+  {{#if policy}}
+    <div class="list-group-item">
+      {{> accordion_policy name = 'Stack Policy' policy_path = (concat 'cloudformation.regions' region 'stacks' @key 'policy') document = policy}}
+    </div>
+  {{/if}}
+</script>
+
+<script>
+  Handlebars.registerPartial("services.cloudformation.regions.id.stacks", $("#services\\.cloudformation\\.regions\\.id\\.stacks\\.partial").html());
+</script>
+
+<!-- Single CloudFormation stack template -->
+<script id="single_cloudformation_stack-template" type="text/x-handlebars-template">
+  {{> modal-template template='services.cloudformation.regions.id.stacks' }}
+</script>
+
+<script>
+  var single_cloudformation_stack_template = Handlebars.compile($("#single_cloudformation_stack-template").html());
+</script>
+<!-- Trail partial -->
+<script id="services.cloudtrail.regions.partial" type="text/x-handlebars-template">
+    <div class="list-group-item active">
+      <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+    <h4>Information</h4>
+      <ul>
+        <li class="list-group-item-text">Configured:
+          <span id="cloudtrail.regions.{{name}}.NotConfigured">
+            {{#ifPositive trails_count}}true{{else}}false{{/ifPositive}}
+          </span>
+        </li>
+      </ul>
+    </div>
+    <div class="list-group-item">
+      <div class="accordion">
+        <h4 class="list-group-item-heading accordion-heading">Trails
+            {{> count_badge target=(concat '#cloudtrail.regions' name 'trails') count=trails_count}}
+        </h4>
+        <div id="cloudtrail.regions.{{name}}.trails" class="accordion-body">
+          <div class="accordion-inner">
+            <ul class="no-bullet">
+              {{#each this.trails}}
+                <li><a href="javascript:showObject('services.cloudtrail.regions.{{../name}}.trails.{{@key}}')">{{name}}</a></li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+</script>
+<script>
+  Handlebars.registerPartial("services.cloudtrail.regions", $("#services\\.cloudtrail\\.regions\\.partial").html());
+</script>
+
+
+<!-- Trail partial -->
+<script id="services.cloudtrail.regions.id.trails.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+      <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+    <h4>Information</h4>
+      <ul>
+        <li class="list-group-item-text">Region: <samp>{{region}}</samp>
+        {{#if scout_link}}
+        <i class="fa fa-exclamation-triangle"></i> multi-region trail
+        {{/if}}
+        </li>
+        {{#unless scout_link}}
+        <li class="list-group-item-text">Logging: <span id="cloudtrail.regions.{{region}}.trails.{{@key}}.IsLogging">{{convert_bool_to_enabled IsLogging}}</span></li>
+        <li class="list-group-item-text">Start Logging Time: {{format_date StartLoggingTime}}</li>
+        <li class="list-group-item-text">Stop Logging Time: {{format_date StopLoggingTime}}</li>
+        <li class="list-group-item-text">Multi Region: {{convert_bool_to_enabled IsMultiRegionTrail}}</li>
+        <li class="list-group-item-text">Management Events: <span id="cloudtrail.regions.{{region}}.trails.{{@key}}.cloudtrail-management-events-disabled">{{convert_bool_to_enabled ManagementEventsEnabled}}</span></li>
+        <li class="list-group-item-text">Data Events: <span id="cloudtrail.regions.{{region}}.trails.{{@key}}.cloudtrail-data-events-disabled">{{convert_bool_to_enabled DataEventsEnabled}}</span></li>
+        <li class="list-group-item-text">Include Global Services:
+          <span id="cloudtrail.regions.{{region}}.trails.{{@key}}.GlobalServicesDuplicated">
+            <span id="cloudtrail.regions.{{region}}.trails.{{@key}}.IncludeGlobalServiceEvents">
+              <samp>{{#if IncludeGlobalServiceEvents}} true {{#unless IsLogging}}(Trail disabled){{/unless}} {{else}} false {{/if}}</samp>
+            </span>
+          </span>
+        </li>
+        <li class="list-group-item-text">Destination S3 Bucket Name: <samp><a href="javascript:showObject('services.s3.buckets.{{bucket_id}}')">{{getValueAt 'services.s3.buckets' bucket_id 'name'}}</a>/{{S3KeyPrefix}}</samp></li>
+        <li class="list-group-item-text">Log File Validation Enabled: <span id="cloudtrail.regions.{{region}}.trails.{{@key}}.LogFileValidationDisabled">{{convert_bool_to_enabled LogFileValidationEnabled}}</span></li>
+        <li class="list-group-item-text">KMS Key: <span id="cloudtrail.regions.{{region}}.trails.{{@key}}.cloudtrail-kms-key-unused"><samp>{{#if KmsKeyId}} true {{else}} false {{/if}}</samp></span></li>
+        {{/unless}}
+      </ul>
+    </div>
+</script>
+<script>
+  Handlebars.registerPartial("services.cloudtrail.regions.id.trails", $("#services\\.cloudtrail\\.regions\\.id\\.trails\\.partial").html());
+</script>
+
+<!-- Single EC2 instance template -->
+<script id="single_cloudtrail_trail-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.cloudtrail.regions.id.trails' }}
+</script>
+<script>
+    var single_cloudtrail_trail_template = Handlebars.compile($("#single_cloudtrail_trail-template").html());
+</script>
+
+<!-- Alarm partial -->
+<script id="services.cloudwatch.regions.id.alarms.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4>Information</h4>
+        <ul>
+            <li class="list-group-item-text">Name: {{name}}</li>
+            <li class="list-group-item-text">Region: {{region}}</li>
+            <li class="list-group-item-text">Actions enabled: <span id="cloudwatch.regions.{{region}}.alarms.{{@key}}.ActionsEnabled">{{ActionsEnabled}}</span></li>
+            <li class="list-group-item-text">State: {{StateValue}}</li>
+            <li class="list-group-item-text">Metric: {{Namespace}}::{{MetricName}}</li>
+        </ul>
+    </div>
+    <div class="list-group-item">
+        <h4>Alarm Actions {{> count_badge count=resources.AlarmActions.length}} </h4>
+        <ul>
+        {{#each AlarmActions}}
+            <li class="'list-group-item-text">{{this}}</li>
+        {{/each}}
+        {{#unless AlarmActions}}
+            <span id="cloudwatch.regions.{{region}}.alarms.{{@key}}.NoActions"><i class="fa fa-exclamation-triangle"></i> No actions have been configured for this alarm.</span>
+        {{/unless}}
+        </ul>
+    </div>
+    <div class="list-group-item">
+        <h4>Insufficient Data Actions {{> count_badge count=InsufficientDataActions.length}}</h4>
+        <ul>
+        {{#each InsufficientDataActions}}
+            <li class="list-group-item-text">{{this}}</li>
+        {{/each}}
+        </ul>
+    </div>
+</script>
+<script>
+    Handlebars.registerPartial("services.cloudwatch.regions.id.alarms", $("#services\\.cloudwatch\\.regions\\.id\\.alarms\\.partial").html());
+</script>
+
+<!-- Single CloudWatch alarm template -->
+<script id="single_cloudwatch_alarm-template" type="text/x-handlebars-template">
+  {{> modal-template template='services.cloudwatch.regions.id.alarms' }}
+</script>
+<script>
+    var single_cloudwatch_alarm_template = Handlebars.compile($("#single_cloudwatch_alarm-template").html());
+</script>
+
+<!-- Recorder partial -->
+<script id="services.config.regions.partial" type="text/x-handlebars-template">
+    <div class="list-group-item active">
+      <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+    <h4>Information</h4>
+      <ul>
+        <li class="list-group-item-text">Configured:
+          <span id="config.regions.{{name}}.NotConfigured">
+            {{#ifPositive recorders_count}}true{{else}}false{{/ifPositive}}
+          </span>
+        </li>
+      </ul>
+    </div>
+    <div class="list-group-item">
+      <div class="accordion">
+        <h4 class="list-group-item-heading accordion-heading">Recorders
+            {{> count_badge target=(concat '#config.regions' name 'recorders') count=recorders_count}}
+        </h4>
+        <div id="config.regions.{{name}}.recorders" class="accordion-body">
+          <div class="accordion-inner">
+            <ul class="no-bullet">
+              {{#each this.recorders}}
+                <li><a href="javascript:showObject('services.config.regions.{{../name}}.recorders.{{@key}}')">{{name}}</a></li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="accordion">
+        <h4 class="list-group-item-heading accordion-heading">Rules
+            {{> count_badge target=(concat '#config.regions' name 'rules') count=rules_count}}
+        </h4>
+        <div id="config.regions.{{name}}.rules" class="accordion-body">
+          <div class="accordion-inner">
+            <ul class="no-bullet">
+              {{#each this.rules}}
+                <li><a href="javascript:showObject('services.config.regions.{{../name}}.rules.{{@key}}')">{{name}}</a></li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+</script>
+<script>
+  Handlebars.registerPartial("services.config.regions", $("#services\\.config\\.regions\\.partial").html());
+</script>
+
+<!-- Recorder partial -->
+<script id="services.config.regions.id.recorders.partial" type="text/x-handlebars-template">
+  <div id="resource-name" class="list-group-item active">
+    <h4 class="list-group-item-heading">{{name}}</h4>
+  </div>
+  <div class="list-group-item">
+    <h4>Information</h4>
+    <ul>
+      <li class="list-group-item-text">Enabled: {{enabled}}</li>
+      <li class="list-group-item-text">Region: {{region}}</li>
+      <li class="list-group-item-text">Role arn: <samp>{{role_ARN}}</samp></li>
+      <li class="list-group-item-text">Last Status: {{last_status}}</li>
+      <li class="list-group-item-text">Last Start Time: {{last_start_time}}</li>
+      <li class="list-group-item-text">Last Status Change Time: {{last_status_change_time}}</li>
+    </ul>
+  </div>
+</script>
+<script>
+  Handlebars.registerPartial("services.config.regions.id.recorders", $("#services\\.config\\.regions\\.id\\.recorders\\.partial").html());
+</script>
+
+<!-- Single Config instance template -->
+<script id="single_config_recorder-template" type="text/x-handlebars-template">
+  {{> modal-template template='services.config.regions.id.recorders' }}
+</script>
+<script>
+  var single_config_recorder_template = Handlebars.compile($("#single_config_recorder-template").html());
+</script>
+
+
+<!-- Rule partial -->
+<script id="services.config.regions.id.rules.partial" type="text/x-handlebars-template">
+  {{#unless scout_link}}
+    <div id="resource-name" class="list-group-item active">
+      <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+    <h4>Information</h4>
+      <ul>
+        <li class="list-group-item-text">ID: {{id}}</li>
+        <li class="list-group-item-text">ARN: <samp>{{arn}}</samp></li>
+        <li class="list-group-item-text">Region: {{region}}</li>
+        <li class="list-group-item-text">Description: <i>{{description}}</i></li>
+        <li class="list-group-item-text">State: {{state}}</li>
+      </ul>
+    </div>
+  {{/unless}}
+</script>
+<script>
+  Handlebars.registerPartial("services.config.regions.id.rules", $("#services\\.config\\.regions\\.id\\.rules\\.partial").html());
+</script>
+
+<!-- Single Config rule template -->
+<script id="single_config_rule-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.config.regions.id.rules' }}
+</script>
+<script>
+    var single_config_rule_template = Handlebars.compile($("#single_config_rule-template").html());
+</script>
+
+<!-- EBS volume partial -->
+<script id="services.ec2.regions.id.snapshots.partial" type="text/x-handlebars-template">
+    <div class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <ul>
+            <li class="list-group-item-text">Id: {{id}}</li>
+            <li class="list-group-item-text">Date:  <span id="ec2.regions.{{region}}.snapshots.{{id}}.old_snapshot">{{StartTime}}</span></li>
+            <li class="list-group-item-text">Description:{{Description}}</li>
+            <li class="list-group-item-text">State: <span id="ec2.regions.{{region}}.snapshots.{{id}}.snapshot_errored">{{State}}</span></li>
+            <li class="list-group-item-text">Encrypted: {{Encrypted}}</li>
+            <li class="list-group-item-text">Volume:  {{> resource_link resource_path = (concat 'services.ec2.regions' region 'volumes' VolumeId )}}</li>
+            <li class="list-group-item-text">Is public: <span id="ec2.regions.{{region}}.snapshots.{{id}}.ebs_snapshot_public">{{getValueAt 'services.ec2.regions' region 'snapshots' id 'public'}}</span></li>
+        </ul>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("services.ec2.regions.id.snapshots", $("#services\\.ec2\\.regions\\.id\\.snapshots\\.partial").html());
+</script>
+
+<!-- EBS volume partial -->
+<script id="services.ec2.regions.id.volumes.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Attributes</h4>
+        {{> generic_object this}}
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("services.ec2.regions.id.volumes", $("#services\\.ec2\\.regions\\.id\\.volumes\\.partial").html());
+</script>
+
+<!-- Single EBS volume template -->
+<script id="single_ebs_volume-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.ec2.regions.id.volumes' }}
+</script>
+
+<script>
+    var single_ec2_volume_template = Handlebars.compile($("#single_ebs_volume-template").html());
+</script>
+<!-- AMIs partial -->
+<script id="services.ec2.regions.id.images.partial" type="text/x-handlebars-template">
+    <div class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <ul>
+            <li class="list-group-item-text">ID: {{id}}</li>
+            <li class="list-group-item-text">Architecture: {{getValueAt 'services.ec2.regions' region 'images' id 'Architecture'}}</li>
+            <li class="list-group-item-text">Public: <span id="ec2.regions.{{region}}.images.{{id}}.image_is_public">{{getValueAt 'services.ec2.regions' region 'images' id 'Public'}}</span></li>
+        </ul>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("services.ec2.regions.id.images", $("#services\\.ec2\\.regions\\.id\\.images\\.partial").html());
+</script>
+
+<!-- Single AMI template -->
+<script id="single_ec2_image-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.ec2.regions.id.images' }}
+</script>
+<script>
+    var single_ec2__template = Handlebars.compile($("#single_ec2_image-template").html());
+</script>    <!-- EC2 instance partial -->
+    <script id="services.ec2.regions.id.vpcs.id.instances.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4>Information</h4>
+            <ul>
+                <li class="list-group-item-text">ID: <samp>{{id}}</samp></li>
+                <li class="list-group-item-text">Region: <samp>{{region}}</samp></li>
+                <li class="list-group-item-text">VPC: <samp>{{getValueAt 'services.ec2.regions' region 'vpcs' vpc 'name'}} ({{vpc}})</samp></li>
+                <li class="list-group-item-text">Reservation ID: <samp>{{reservation_id}}</samp></li>
+                <li class="list-group-item-text">Monitoring: <span id="ec2.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.monitoring_disabled">{{convert_bool_to_enabled monitoring_enabled}}</span></li>
+                <li class="list-group-item-text">Access Key Name: <samp>{{KeyName}}</samp></li>
+                <li class="list-group-item-text">State: <samp>{{makeTitle State.Name}}</samp></li>
+                <li class="list-group-item-text">Instance Type:
+                    <span id="services.ec2.regions.vpcs.instances-unscannable-instance-types-{{id}}"> <samp>{{InstanceType}}</samp></span>
+                </li>
+                <li class="list-group-item-text">Up Since: {{format_date LaunchTime}}</li>
+            </ul>
+        </div>
+        <div class="list-group-item" style="padding-bottom: 0 !important;">
+            <h4>Network interfaces</h4>
+            {{#each network_interfaces}}
+                {{> network_interface region = ../region vpc = ../vpc network_interface = @../key}}
+            {{/each}}
+        </div>
+        {{#if metadata_options}}
+        <div class="list-group-item">
+            <h4>Metadata Options</h4>
+            <ul id="ec2.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.metadata_options">
+                <li>Endpoint: <samp>{{metadata_options.HttpEndpoint}}</samp></li>
+                <li>HTTP Tokens: <samp>{{metadata_options.HttpTokens}}</samp></li>
+            </ul>
+        </div>
+        {{/if}}
+        {{#if user_data}}
+        <div class="list-group-item" style="padding-bottom: 0 !important;">
+            <h4>User data</h4>
+            <div>
+                <code>{{#each (split_lines user_data)}}   {{this}}<br>{{/each}}</code>
+            </div>
+            {{#if user_data_secrets}}
+            <br>
+            <h5 id="ec2.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.potential_secrets">Potential Secrets</h5>
+            <ul>
+                {{#each user_data_secrets}}
+                <li>
+                    {{@key}}
+                    <ul>
+                        {{#each this}}
+                        <li><code>{{this}}</code></li>
+                        {{/each}}
+                    </ul>
+                </li>
+                {{/each}}
+            </ul>
+            {{/if}}
+        </div>
+        {{/if}}
+    </script>
+    <script>
+      Handlebars.registerPartial("services.ec2.regions.id.vpcs.id.instances", $("#services\\.ec2\\.regions\\.id\\.vpcs\\.id\\.instances\\.partial").html());
+    </script>
+
+    <!-- Single EC2 instance template -->
+    <script id="single_ec2_instance-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.ec2.regions.id.vpcs.id.instances' }}
+    </script>
+    <script>
+        var single_ec2_instance_template = Handlebars.compile($("#single_ec2_instance-template").html());
+    </script>
+<!-- EC2 security group partial -->
+<script id="services.ec2.regions.id.vpcs.id.security_groups.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+      <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <div class="list-group-item-text">ID: <samp>{{id}}</samp></div>
+        <div class="list-group-item-text">Region: <samp>{{region}}</samp></div>
+        <div class="list-group-item-text">VPC: {{getValueAt 'services.vpc.regions' region 'vpcs' vpc 'name'}} ({{vpc}})</div>
+        <div class="list-group-item-text">Description: <samp>{{description}}</samp></div>
+    </div>
+
+    {{#each rules}}
+      {{> services.ec2.regions.vpcs.security_groups.rule_list this sg_name = ../name sg_id = ../id direction = @key vpc = ../vpc region = ../region }}
+    {{/each}}
+
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Usage</h4>
+        {{#if used_by}}
+        <ul>
+            {{#each used_by}}
+                {{#each resource_type}}
+                    {{> services.ec2.regions.vpcs.security_groups.resource_list service=@../key resources=this resource_type=@key status=this region=../../region vpc=../../vpc group=../../../id}}
+                {{/each}}
+            {{/each}}
+        </ul>
+        {{else}}
+        <span id="services.ec2.regions.vpcs.security_groups-unused-{{id}}" class="finding-hidden item-margin">
+            <i class="fa fa-check-circle"></i> This security group is not in use.
+        </span>
+        {{/if}}
+    </div>
+</script>
+
+<script>
+  Handlebars.registerPartial("services.ec2.regions.id.vpcs.id.security_groups", $("#services\\.ec2\\.regions\\.id\\.vpcs\\.id\\.security_groups\\.partial").html());
+</script>
+
+<!-- Single EC2 security group template -->
+<script id="single_ec2_security_group-template" type="text/x-handlebars-template">
+  {{> modal-template template='services.ec2.regions.id.vpcs.id.security_groups'}}
+</script>
+
+<script>
+  var single_ec2_security_group_template = Handlebars.compile($("#single_ec2_security_group-template").html());
+</script>    <!-- EC2 security group associated resources list partial -->
+    <script id="services.ec2.regions.vpcs.security_groups.resource_list.partial" type="text/x-handlebars-template">
+      {{#if resources}}
+        <div class="accordion">
+          <li>
+            <h5 class="list-group-item-heading accordion-heading">{{ makeTitle service }} {{ makeTitle resource_type }}
+                <!--{{> count_badge count=resources.length}}-->
+            </h5>
+          </li>
+          <div id="ec2_security_group-{{group}}-{{service}}_{{resource_type}}_list-{{status}}" class="accordion-body in">
+            <div class="accordion-inner">
+              <ul>
+                {{#each resources}}
+                  <li class="list-group-item-text">
+                    <a href="javascript:showObject('services.{{../service}}.regions.{{../region}}.vpcs.{{../vpc}}.{{../resource_type}}.{{this}}')">
+                        {{this}}
+                    </a>
+                  </li>
+                {{/each}}
+              </ul>
+            </div>
+          </div>
+        </div>
+      {{else}}
+        <h5 class="list-group-item-heading item-margin accordion-heading">{{status}}
+            {{> count_badge count=resources.length}}
+        </h5>
+      {{/if}}
+    </script>
+
+    <script>
+      Handlebars.registerPartial("services.ec2.regions.vpcs.security_groups.resource_list", $("#services\\.ec2\\.regions\\.vpcs\\.security_groups\\.resource_list\\.partial").html());
+    </script>
+
+    <!-- EC2 security group rules partial -->
+    <script id="services.ec2.regions.vpcs.security_groups.rule_list.partial" type="text/x-handlebars-template">
+      <div class="list-group-item">
+        <h4 class="list-group-item-heading">
+          {{makeTitle direction}} Rules
+          {{> count_badge count=count}}
+        </h4>
+        <ul>
+        {{#each protocols}}
+          <li class="list-group-item-text">{{@key}}</li>
+          <ul>
+            <li class="list-group-item-text">{{#ifEqual @key "ICMP"}}Message types{{else}}Ports{{/ifEqual}}:
+            <ul>
+            {{#each ports}}
+              <li><span id="ec2.regions.{{../../region}}.vpcs.{{../../vpc}}.security_groups.{{../../sg_id}}.rules.{{../../direction}}.protocols.{{@../key}}.ports.{{@key}}">{{@key}}</span></li>
+              <ul>
+              {{#if cidrs}}
+                <li class="list-group-item-text">IP addresses:</li>
+                {{> ip_grants items = cidrs span_id_prefix = (concat 'ec2.regions' ../../../region 'vpcs' ../../../vpc 'security_groups' ../../../sg_id 'rules' ../../../direction 'protocols' @../key 'ports' @key 'cidrs')}}
+              {{/if}}
+              {{#if Ipv6Ranges}}
+                <li class="list-group-item-text">IPv6 addresses:</li>
+                {{> ip_grants items = Ipv6Ranges span_id_prefix = (concat 'ec2.regions' ../../../region 'vpcs' ../../../vpc 'security_groups' ../../../sg_id 'rules' ../../../direction 'protocols' @../key 'ports' @key 'Ipv6Ranges')}}
+              {{/if}}
+              {{#if security_groups}}
+                <li class="list-group-item-text">EC2 security groups:</li>
+                {{> ec2_grants region = ../../../region vpc = ../../../vpc sg_id = ../../../sg_id direction = ../../../direction protocol = @../key ports = @key items = security_groups}}
+              {{/if}}
+              </ul>
+            {{/each}}
+            </ul>
+          </ul>
+        {{/each}}
+        </ul>
+        {{#ifEqual sg_name 'default'}}
+          <span id="ec2.regions.{{region}}.vpcs.{{vpc}}.security_groups.{{sg_id}}.rules.{{direction}}.default_with_rules" class="finding-hidden item-margin">
+            <i class="fa fa-exclamation-triangle"></i> Default security groups should have no rules.
+          </span>
+        {{/ifEqual}}
+      </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.ec2.regions.vpcs.security_groups.rule_list", $("#services\\.ec2\\.regions\\.vpcs\\.security_groups\\.rule_list\\.partial").html());
+    </script>
+
+
+<!-- ElastiCache cluster partial -->
+<script id="services.elasticache.regions.id.parameter_groups.partial" type="text/x-handlebars-template">
+    <div class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Attributes</h4>
+        {{> generic_object resource}}
+    </div>
+</script>
+<script>
+    Handlebars.registerPartial("services.elasticache.regions.id.parameter_groups", $("#services\\.elasticache\\.regions\\.id\\.parameter_groups\\.partial").html());
+</script>
+
+<!-- ElastiCache cluster partial -->
+<script id="services.elasticache.regions.id.security_groups.partial" type="text/x-handlebars-template">
+    <div class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Attributes</h4>
+        {{> generic_object resource}}
+    </div>
+</script>
+<script>
+    Handlebars.registerPartial("services.elasticache.regions.id.security_groups", $("#services\\.elasticache\\.regions\\.id\\.security_groups\\.partial").html());
+</script>
+
+<!-- ElastiCache cluster partial -->
+<script id="services.elasticache.regions.id.vpcs.id.subnet_groups.partial" type="text/x-handlebars-template">
+    <div class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Attributes</h4>
+        {{> generic_object resource}}
+    </div>
+</script>
+<script>
+    Handlebars.registerPartial("services.elasticache.regions.id.vpcs.id.subnet_groups", $("#services\\.elasticache\\.regions\\.id\\.vpcs\\.id\\.subnet_groups\\.partial").html());
+</script>
+
+    <!-- ElastiCache cluster partial -->
+    <script id="services.elasticache.regions.id.vpcs.id.clusters.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">Attributes</h4>
+            {{> generic_object resource}}
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.elasticache.regions.id.vpcs.id.clusters", $("#services\\.elasticache\\.regions\\.id\\.vpcs\\.id\\.clusters\\.partial").html());
+    </script>
+
+    <!-- ELB Policy partial -->
+    <script id="services.elb.regions.id.elb_policies.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        {{#ifEqual PolicyTypeName 'SSLNegotiationPolicyType'}}
+            <div class="list-group-item">
+                <h4>Protocols</h4>
+                <ul>
+                    {{#each protocols}}
+                        <li class="list-group-item-text">{{@key}}: {{this}}</li>
+                    {{/each}}
+                </ul>
+            </div>
+            <div class="list-group-item">
+                <h4>Options</h4>
+                <ul>
+                    {{#each options}}
+                        <li class="list-group-item-text">{{@key}}: {{this}}</li>
+                    {{/each}}
+                </ul>
+            </div>
+            <div class="list-group-item">
+                <h4>Ciphers</h4>
+                <ul>
+                    {{#each ciphers}}
+                        {{#ifEqual this 'true'}}
+                            <li class="list-group-item-text">{{@key}}: {{this}}</li>
+                        {{/ifEqual}}
+                    {{/each}}
+                </ul>
+        {{else}}
+            <div class="list-group-item">
+                <h4>Attributes</h4>
+                <ul class="no-bullet">
+                    {{#each PolicyAttributeDescriptions}}
+                        <li class="list-group-item-text">{{AttributeName}}: {{AttributeValue}}</li>
+                    {{/each}}
+                </ul>
+            </div>
+        {{/ifEqual}}
+    </script>
+    <script>
+      Handlebars.registerPartial("services.elb.regions.id.elb_policies", $("#services\\.elb\\.regions\\.id\\.elb_policies\\.partial").html());
+    </script>
+
+    <!-- Single elb security group template -->
+    <script id="single_elb_elb_policy-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.elb.regions.id.elb_policies'}}
+    </script>
+    <script>
+        var single_elb_elb_policy_template = Handlebars.compile($("#single_elb_elb_policy-template").html());
+    </script>
+    <!-- elb ELB partial -->
+    <script id="services.elb.regions.id.vpcs.id.elbs.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4>Network</h4>
+            <ul>
+                <li class="list-group-item-text">VPC: {{getValueAt 'services.elb.regions' region 'vpcs' vpc 'name'}} ({{vpc}})</li>
+                <li class="list-group-item-text">DNS: {{DNSName}}</li>
+                <li class="list-group-item-text">Scheme: {{Scheme}}</li>
+                <li class="list-group-item-text">Availability zones:</li>
+                <ul>
+                    {{#each AvailabilityZones}}
+                        <li class="list-group-item-text">{{this}}</li>
+                    {{/each}}
+                </ul>
+            </ul>
+        </div>
+        <div class="list-group-item">
+            <h4>Listeners</h4>
+            <ul>
+                {{#each listeners}}
+                    <li class="list-group-item-text">
+                        {{@key}} ({{Protocol}}{{#if SslPolicy}}, {{SslPolicy}}{{/if}})
+                    </li>
+                {{/each}}
+          </ul>
+        </div>
+        <div class="list-group-item">
+            <h4>Attributes</h4>
+            <ul>
+                {{#each attributes}}
+                    {{#each this}}
+                        <li class="list-group-item-text">{{@../key}}.{{@key}}: <span id="elb.regions.{{../../region}}.vpcs.{{../../vpc}}.elbs.{{@../../key}}.attributes.{{@../key}}.{{@key}}">{{this}}</span></li>
+                    {{/each}}
+                {{/each}}
+            </ul>
+        </div>
+        <div class="list-group-item" style="padding-bottom: 0 !important;">
+          <div class="accordion">
+            <h4 class="list-group-item-heading accordion-heading">Security groups
+              {{> count_badge count=security_groups.length target=(concat '#services.elb.regions' region 'vpcs' vpc 'elbs' @key 'security_groups')}}
+            </h4>
+            <div id="services.elb.regions.{{region}}.vpcs.{{vpc}}.elbs.{{@key}}.security_groups" class="accordion-body">
+              <div class="accordion-inner">
+                <ul class="no-bullet">
+                  {{#each security_groups}}
+                    <li><a href="javascript:showObject('services.elb.regions.{{../region}}.vpcs.{{../vpc}}.security_groups.{{GroupId}}')">{{GroupId}}</a></li>
+                  {{/each}}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="list-group-item">
+          <h4>Destination</h4>
+          <ul>
+            {{> services.elb.regions.vpcs.elbs.linked_resources region = region vpc = vpc resources = instances resource_type = 'instances'}}
+            {{> services.elb.regions.vpcs.elbs.linked_resources region = region vpc = vpc resources = Subnets resource_type = 'subnets'}}
+          </ul>
+        </div>
+        {{#if tags}}
+            <div class="list-group-item">
+                <h4>Tags</h4>
+                <ul>
+                    {{#each tags}}
+                        <li class="list-group-item-text"><samp>{{@key}}</samp>: <samp>{{this}}</samp></li>
+                    {{/each}}
+                </ul>
+            </div>
+        {{/if}}
+    </script>
+    <script>
+      Handlebars.registerPartial("services.elb.regions.id.vpcs.id.elbs", $("#services\\.elb\\.regions\\.id\\.vpcs\\.id\\.elbs\\.partial").html());
+    </script>
+
+    <!-- Single instance template -->
+    <script id="single_elb_elb-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.elb.regions.id.vpcs.id.elbs'}}
+    </script>
+
+    <script>
+        var single_elb_elb_template = Handlebars.compile($("#single_elb_elb-template").html());
+    </script>
+
+
+    <!-- elb ELB partial -->
+    <script id="services.elb.regions.vpcs.elbs.linked_resources.partial" type="text/x-handlebars-template">
+      {{#if resources.length}}
+        <div class="accordion">
+          <li>
+            <h5 class="list-group-item-heading accordion-heading">{{makeTitle resource_type}}:
+              {{> count_badge count=resources.length target=(concat '#services.elb.regions' region 'vpcs' vpc 'elbs' @key resource_type)}}
+            </h5>
+          </li>
+          <div id="services.elb.regions.{{region}}.vpcs.{{vpc}}.elbs.{{@key}}.{{resource_type}}" class="accordion-body">
+            <div class="accordion-inner">
+              <ul>
+              {{#each resources}}
+                <li class="list-group-item-text"><a href="javascript:showObject('services.elb.regions.{{../region}}.vpcs.{{../vpc}}.{{../resource_type}}.{{this}}')">{{this}}</a></li>
+              {{/each}}
+              </ul>
+            </div>
+          </div>
+        </div>
+      {{else}}
+        <h5 class="list-group-item-heading item-margin accordion-heading">{{makeTitle resource_type}}:<span class="badge float-right">{{resources.length}}</span></h5>
+      {{/if}}
+    </script>
+    <script>
+        Handlebars.registerPartial("services.elb.regions.vpcs.elbs.linked_resources", $("#services\\.elb\\.regions\\.vpcs\\.elbs\\.linked_resources\\.partial").html());
+    </script>
+
+    <!-- elb ELB partial -->
+    <script id="services.elb.regions.vpcs.elbs.listener.partial" type="text/x-handlebars-template">
+        {{LoadBalancerPort}} ({{Protocol}}) <i class="fa fa-arrow-right"></i> {{InstancePort}} ({{InstanceProtocol}})
+    </script>
+    <script>
+        Handlebars.registerPartial("services.elb.regions.vpcs.elbs.listener", $("#services\\.elb\\.regions\\.vpcs\\.elbs\\.listener\\.partial").html());
+    </script>
+    <!-- elb ELB partial -->
+    <script id="services.elb.regions.vpcs.elbs.linked_policy.partial" type="text/x-handlebars-template">
+        <a href="javascript:showObject('services.elb.regions.{{region}}.elb_policies.{{item}}')">
+            {{get_value_at (concat 'services.elb.regions' region 'elb_policies' item 'name')}}
+        </a>
+    </script>
+    <script>
+        Handlebars.registerPartial("services.elb.regions.vpcs.elbs.linked_policy", $("#services\\.elb\\.regions\\.vpcs\\.elbs\\.linked_policy\\.partial").html());
+    </script>
+    <!-- ELBv2 LB partial -->
+    <script id="services.elbv2.regions.id.vpcs.id.lbs.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4>Network</h4>
+            <ul>
+                <li class="list-group-item-text">VPC: {{getValueAt 'services.elbv2.regions' region 'vpcs' vpc 'name'}} ({{vpc}})</li>
+                <li class="list-group-item-text">DNS: {{DNSName}}</li>
+                <li class="list-group-item-text"><span id="elbv2.regions.{{region}}.vpcs.{{vpc}}.lbs.{{@key}}.load_balancer_scheme">Scheme: {{Scheme}}</span></li>
+                <li class="list-group-item-text">Type: {{Type}}</li>
+                <li class="list-group-item-text">Availability zones:</li>
+                <ul>
+                    {{#each AvailabilityZones}}
+                        <li class="list-group-item-text">{{ZoneName}} ({{SubnetId}})</li>
+                    {{/each}}
+                </ul>
+            </ul>
+        </div>
+        <div class="list-group-item">
+            <h4>Listeners</h4>
+            <ul>
+                <span id="elbv2.regions.{{region}}.vpcs.{{vpc}}.lbs.{{@key}}.has_secure_protocol">
+                {{#each listeners}}
+                    <li class="list-group-item-text">
+                        {{@key}} ({{Protocol}}{{#if SslPolicy}}, {{SslPolicy}}{{/if}})
+                    </li>
+                {{/each}}
+                </span>
+            </ul>
+        </div>
+        <div class="list-group-item">
+            <h4>Attributes</h4>
+            <ul>
+                {{#each attributes}}
+                    <li class="list-group-item-text">{{Key}}: <span id="elbv2.regions.{{../region}}.vpcs.{{../vpc}}.lbs.{{@../key}}.attributes.{{@key}}">{{Value}}</span></li>
+                {{/each}}
+            </ul>
+        </div>
+        <div class="list-group-item" style="padding-bottom: 0 !important;">
+            <div class="accordion">
+                <h4 class="list-group-item-heading accordion-heading">Security groups
+                  {{> count_badge count=security_groups.length target=(concat '#services.elbv2.regions' region 'vpcs' vpc 'lbs' @key 'security_groups')}}
+                </h4>
+                <div id="services.elbv2.regions.{{region}}.vpcs.{{vpc}}.lbs.{{@key}}.security_groups" class="accordion-body">
+                    <div class="accordion-inner">
+                        <ul class="no-bullet">
+                            {{#each security_groups}}
+                                <li><a href="javascript:showObject('services.ec2.regions.{{../region}}.vpcs.{{../vpc}}.security_groups.{{GroupId}}')">{{GroupId}}</a></li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{#if tags}}
+            <div class="list-group-item">
+                <h4>Tags</h4>
+                <ul>
+                    {{#each tags}}
+                    <li class="list-group-item-text"><samp>{{@key}}</samp>: <samp>{{this}}</samp></li>
+                    {{/each}}
+                </ul>
+            </div>
+        {{/if}}
+
+    </script>
+    <script>
+      Handlebars.registerPartial("services.elbv2.regions.id.vpcs.id.lbs", $("#services\\.elbv2\\.regions\\.id\\.vpcs\\.id\\.lbs\\.partial").html());
+    </script>
+
+    <!-- Single instance template -->
+    <script id="single_elbv2_lb-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.elbv2.regions.id.vpcs.id.lbs'}}
+    </script>
+
+    <script>
+        var single_elbv2_lb_template = Handlebars.compile($("#single_elbv2_lb-template").html());
+    </script>
+
+    <!-- EMR cluster partial -->
+    <script id="services.emr.regions.id.vpcs.id.clusters.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4>Information</h4>
+            <ul>
+                <li class="list-group-item-text">Region: {{region}}</li>
+                <li class="list-group-item-text">VPC: {{getValueAt 'services.ec2.regions' region 'vpcs' vpc 'name'}} ({{vpc}})</li>
+                <li class="list-group-item-text">Id: {{id}}</li>
+                <li class="list-group-item-text">Availability zone: {{Ec2InstanceAttributes.Ec2AvailabilityZone}}</li>
+                <li class="list-group-item-text">Status: {{Status.State}}</li>
+                <li class="list-group-item-text">Instance profile: {{Ec2InstanceAttributes.IamInstanceProfile}}</li>
+                <li class="list-group-item-text">Visible to all users: {{VisibleToAllUsers}}</li>
+            </ul>
+        </div>
+        <div class="list-group-item">
+            <h4>Master</h4>
+            <ul>
+                <li class="list-group-item-text">Public DNS: {{#if MasterPublicDnsName}}{{MasterPublicDnsName}}{{else}}N/A{{/if}}</li>
+                <li class="list-group-item-text">Security group:
+                    {{#if Ec2InstanceAttributes.EmrManagedMasterSecurityGroup}}
+                        <a href="javascript:showObject('services.ec2.regions.{{region}}.vpcs.{{vpc}}.security_groups.{{Ec2InstanceAttributes.EmrManagedMasterSecurityGroup}}')">
+                            {{getValueAt 'services.ec2.regions' region 'vpcs' vpc 'security_groups' Ec2InstanceAttributes.EmrManagedMasterSecurityGroup 'name'}}
+                        </a>
+                    {{else}}
+                        N/A
+                    {{/if}}
+                </li>
+            </ul>
+        </div>
+        <div class="list-group-item">
+            <h4>Slave</h4>
+            <ul>
+                <li class="list-group-item-text">Security group:
+                    {{#if Ec2InstanceAttributes.EmrManagedSlaveSecurityGroup}}
+                        <a href="javascript:showObject('services.ec2.regions.{{region}}.vpcs.{{vpc}}.security_groups.{{Ec2InstanceAttributes.EmrManagedSlaveSecurityGroup}}')">
+                            {{getValueAt 'services.ec2.regions' region 'vpcs' vpc 'security_groups' Ec2InstanceAttributes.EmrManagedSlaveSecurityGroup 'name'}}
+                        </a>
+                    {{else}}
+                        N/A
+                    {{/if}}
+                </li>
+            </ul>
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.emr.regions.id.vpcs.id.clusters", $("#services\\.emr\\.regions\\.id\\.vpcs\\.id\\.clusters\\.partial").html());
+    </script>
+
+    <!-- Single EMR cluster template -->
+    <script id="single_emr_cluster-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.emr.regions.id.vpcs.id.clusters'}}
+    </script>
+    <script>
+        var single_emr_cluster_template = Handlebars.compile($("#single_emr_cluster-template").html());
+    </script>
+
+
+  <!-- IAM credential report partial -->
+  <script id="services.iam.credential_reports.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+      <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Credentials Report</h4>
+        <div class="list-group-item-text item-margin">Creation Date: {{ format_date (getValueAt 'services' 'iam' 'credential_reports' @key 'user_creation_time')}}</div>
+        <div class="list-group-item-text item-margin">Last Used Date:  <span id="iam.credential_reports.{{@key}}.inactive_user">{{ format_date (getValueAt 'services' 'iam' 'credential_reports' @key 'last_used')}}</span></div>
+        <div class="list-group-item-text item-margin">Password Last Used: <span id="iam.credential_reports.{{@key}}.password_last_used">{{ format_date (getValueAt 'services' 'iam' 'credential_reports' @key 'password_last_used')}}</span></div>
+        <div class="list-group-item-text item-margin">MFA Active: <span id="iam.credential_reports.{{@key}}.mfa_active"><samp>{{getValueAt 'services' 'iam' 'credential_reports' @key 'mfa_active'}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Access Key 1 Active: <span id="iam.credential_reports.{{@key}}.access_key_1_active"><samp>{{getValueAt 'services' 'iam' 'credential_reports' @key 'access_key_1_active'}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Access Key 2 Active: <span id="iam.credential_reports.{{@key}}.access_key_2_active"><samp>{{getValueAt 'services' 'iam' 'credential_reports' @key 'access_key_2_active'}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Access Key 1 Last Used: {{format_date (getValueAt 'services' 'iam' 'credential_reports' @key 'access_key_1_last_used_date')}}</div>
+        <div class="list-group-item-text item-margin">Access Key 2 Last Used: {{format_date (getValueAt 'services' 'iam' 'credential_reports' @key 'access_key_2_last_used_date')}}</div>
+        <div class="list-group-item-text item-margin">Signing Cert 1 Active: <samp>{{getValueAt 'services' 'iam' 'credential_reports' @key 'cert_1_active'}}</samp></div>
+        <div class="list-group-item-text item-margin">Signing Cert 2 Active: <samp>{{getValueAt 'services' 'iam' 'credential_reports' @key 'cert_2_active'}}</samp></div>
+    </div>
+  </script>
+
+  <script>
+    Handlebars.registerPartial("services.iam.credential_reports", $("#services\\.iam\\.credential_reports\\.partial").html());
+  </script>
+
+<!-- Single IAM credential_reports template -->
+<script id="services.iam.credential_reports.template" type="text/x-handlebars-template">
+    {{> modal-template template='services.iam.credential_reports'}}
+</script>
+
+<script>
+    var single_iam_credential_reports_template = Handlebars.compile($("#services\\.iam\\.credential_reports\\.template").html());
+</script>
+
+    <!-- IAM group partial -->
+    <script id="services.iam.groups.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Information</h4>
+          <div class="list-group-item-text item-margin">Creation date: {{CreateDate}}</div>
+        </div>
+        <div class="list-group-item" style="padding-bottom: 0 !important;">
+            <h4 class="list-group-item-heading">Members
+                {{> count_badge count=users.length target=(concat '#iam.groups' id 'users')}}
+            </h4>
+            <div class="accordion-inner">
+                <ul>
+                    {{#each this.users}}
+                    <li><a href="javascript:showObject('services.iam.users.{{this}}')">{{getValueAt 'services.iam.users' this 'name'}}</a></li>
+                    {{/each}}
+                </ul>
+            </div>
+        </div>
+        {{> services.iam.inline_policies resource_type = 'groups' resource_id = @key}}
+        {{> services.iam.policies_list}}
+    </script>
+    <script>
+      Handlebars.registerPartial("services.iam.groups", $("#services\\.iam\\.groups\\.partial").html());
+    </script>
+
+    <!-- Single IAM group template -->
+    <script id="services.iam.groups.template" type="text/x-handlebars-template">
+        {{> modal-template template='services.iam.groups'}}
+    </script>
+    <script>
+        var single_iam_group_template = Handlebars.compile($("#services\\.iam\\.groups\\.template").html());
+    </script>
+
+
+    <!-- IAM inline policies partial -->
+    <script id="services.iam.inline_policies.partial" type="text/x-handlebars-template">
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">
+            Inline Policies 
+            {{> count_badge count=inline_policies_count}}
+          </h4>
+          {{#each inline_policies}}
+            {{> accordion_policy name = name document = PolicyDocument policy_path = (concat 'iam' ../resource_type ../resource_id 'inline_policies' @key 'PolicyDocument') heading="h5" samp=true}}
+          {{/each}}
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.iam.inline_policies", $("#services\\.iam\\.inline_policies\\.partial").html());
+    </script>
+
+
+    <!-- IAM managed policy partial -->
+    <script id="services.iam.policies.partial" type="text/x-handlebars-template">
+      <div id="resource-name" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+      </div>
+      <div class="list-group-item">
+          {{> accordion_policy name = arn document = PolicyDocument policy_path = (concat 'iam.policies' @key 'PolicyDocument') heading = "h5" }}
+      </div>
+      <div class="list-group-item">
+        <h4 class="list-group-item-heading">Attached Entities</h4>
+        <ul>
+          {{#each attached_to}}
+            <li>{{makeTitle @key}}</li>
+            <ul>
+              {{#each this}}
+                <li><a href="javascript:showObject('services.iam.{{@../key}}.{{id}}')">{{name}}</a></li>
+              {{/each}}
+            </ul>
+          {{/each}}
+        </ul>
+      </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.iam.policies", $("#services\\.iam\\.policies\\.partial").html());
+    </script>
+
+    <!-- Single IAM managed policy template -->
+    <script id="services.iam.policy.template" type="text/x-handlebars-template">
+        {{> modal-template template='services.iam.policies'}}
+    </script>
+    <script>
+        var single_iam_policy_template = Handlebars.compile($("#services\\.iam\\.policy\\.template").html());
+    </script>
+
+
+    <!-- IAM managed policies partial -->
+    <script id="services.iam.policies_list.partial" type="text/x-handlebars-template">
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Managed Policies {{> count_badge count=this.policies.length}}</h4>
+          <ul class="no-bullet">
+          {{#each policies}}
+            <li class="list-group-item-text"><a href="javascript:showObject('services.iam.policies.{{this}}')">{{getValueAt 'services.iam.policies' this 'name'}}</a></li>
+          {{/each}}
+          </ul>
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.iam.policies_list", $("#services\\.iam\\.policies_list\\.partial").html());
+    </script>
+
+    <!-- IAM role partial -->
+    <script id="services.iam.roles.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">Information</h4>
+            <div class="list-group-item-text item-margin">ID: <span id="iam.roles.{{@key}}.id"><samp>{{value_or_none id}}</samp></span></div>
+            <div class="list-group-item-text item-margin">Arn: <span id="iam.roles.{{@key}}.arn"><samp>{{value_or_none arn}}</samp></span></div>
+            <div class="list-group-item-text item-margin">Description: <span id="iam.roles.{{@key}}.description"><samp>{{value_or_none description}}</samp></span></div>
+            <div class="list-group-item-text item-margin">Creation Date: <span id="iam.roles.{{@key}}.create_date">{{format_date create_date}}</span></div>
+            <div class="list-group-item-text item-margin">Path: <span id="iam.roles.{{@key}}.path"><samp>{{value_or_none path}}</samp></span></div>
+            <div class="list-group-item-text item-margin">Max Session Duration: <span id="iam.roles.{{@key}}.max_session_duration"><samp>{{value_or_none max_session_duration}}</samp></span></div>
+        </div>
+        <div class="list-group-item">
+            {{> accordion_policy name = 'Role Trust Policy' policy_path = (concat 'iam.roles' @key 'assume_role_policy.PolicyDocument') document = assume_role_policy.PolicyDocument}}
+        </div>
+        <div class="list-group-item">
+          <div class="accordion">
+            <h4 class="list-group-item-heading accordion-heading">Instances
+                {{> count_badge count=instances_count target=(concat '#iam.roles' id 'instances')}}
+            </h4>
+            <div id="iam.roles.{{id}}.instances" class="accordion-body">
+              <div class="accordion-inner">
+                <ul class="no-bullet">
+                  {{#each instance_profiles}}
+                    {{#each instances}}
+                      <li><a href="javascript:findAndShowEC2Object('regions.vpcs.instances', '{{this}}')">{{this}}</a></li>
+                    {{/each}}
+                  {{/each}}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        {{> services.iam.inline_policies resource_type = 'roles' resource_id = id}}
+        {{> services.iam.policies_list resource_type = 'roles' resource_id = id}}
+    </script>
+    <script>
+      Handlebars.registerPartial("services.iam.roles", $("#services\\.iam\\.roles\\.partial").html());
+    </script>
+
+    <!-- Single IAM role template -->
+    <script id="services.iam.roles.template" type="text/x-handlebars-template">
+        {{> modal-template template='services.iam.roles'}}
+    </script>
+    <script>
+        var single_iam_role_template = Handlebars.compile($("#services\\.iam\\.roles\\.template").html());
+    </script>
+
+
+  <!-- IAM user partial -->
+  <script id="services.iam.users.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+      <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+      <h4 class="list-group-item-heading">Information</h4>
+      <div class="list-group-item-text item-margin">Creation date: {{CreateDate}}</div>
+    </div>
+    <div class="list-group-item">
+      <h4 class="list-group-item-heading">Authentication methods</h4>
+      <p class="list-group-item-text item-margin">Password enabled: {{has_profiles? LoginProfile}}</p>
+      <ul></ul>
+      <p class="list-group-item-text item-margin">Multi-Factor enabled: <span id="iam.users.{{id}}.mfa_enabled">{{has_mfa? MFADevices}}</span></p>
+      <ul class="item-margin">
+      {{#each MFADevices}}
+        <li class="list-group-item-text"> Serial number: {{SerialNumber}}</li>
+      {{/each}}
+      </ul>
+      <p class="list-group-item-text item-margin">Access Keys: <span id="iam.users.{{id}}.multiple_api_keys">{{has_access_keys? AccessKeys}}</span></p>
+      <ul class="item-margin">
+      {{#each AccessKeys}}
+        <li class="list-group-item-text"><span id="iam.users.{{@../key}}.AccessKeys.{{@key}}">{{AccessKeyId}}, {{Status}}, created on {{CreateDate}}</span></li>
+      {{/each}}
+      </ul>
+      {{#ifHasProfiles LoginProfile}}
+        {{#greaterLengthThan AccessKeys 0}}
+          <p class="list-group-item-text item-margin">
+            <span id="iam.users.{{id}}.password_and_keys" class="finding-hidden">
+              <i class="fa fa-exclamation-triangle"></i> Review the need for password-based and key-based authentication
+            </span>
+          </p>
+        {{/greaterLengthThan}}
+      {{/ifHasProfiles }}
+      {{#greaterLengthThan AccessKeys 1}}
+      <p class="list-group-item-text item-margin">
+          <span id="iam.users.{{id}}.multiple_active_api_keys" class="finding-hidden">
+            <i class="fa fa-exclamation-triangle"></i> Review the need for multiple active access keys
+          </span>
+      </p>
+      {{/greaterLengthThan}}
+    </div>
+    <div class="list-group-item">
+      <h4 id="iam.users.{{id}}.user_groups" class="list-group-item-heading">Groups
+        {{> count_badge count=groups.length}}
+      </h4>
+      <ul>
+      {{#each groups}}
+        <li class="list-group-item-text"><a href="javascript:showObject('services.iam.groups', 'name', '{{this}}')">{{this}}</a></li>
+      {{/each}}
+      </ul>
+    </div>
+    {{> services.iam.inline_policies resource_type = 'users' resource_id = id}}
+    {{> services.iam.policies_list resource_type = 'users' resource_id = id}}
+  </script>
+  <script>
+    Handlebars.registerPartial("services.iam.users", $("#services\\.iam\\.users\\.partial").html());
+  </script>
+
+    <!-- Single IAM user template -->
+    <script id="services.iam.users.template" type="text/x-handlebars-template">
+        {{> modal-template template='services.iam.users'}}
+    </script>
+    <script>
+        var single_iam_user_template = Handlebars.compile($("#services\\.iam\\.users\\.template").html());
+    </script>
+
+<!-- Key partial -->
+<script id="services.kms.regions.id.keys.partial" type="text/x-handlebars-template">
+  {{#unless scout2_link}}
+    <div id="resource-name" class="list-group-item active">
+      <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+    <h4>Information</h4>
+      <ul>
+        <li class="list-group-item-text">ID: <span id="kms.regions.{{region}}.keys.{{@key}}.id"><samp>{{id}}</samp></span></li>
+        <li class="list-group-item-text">ARN: <span id="kms.regions.{{region}}.keys.{{@key}}.arn"><samp>{{arn}}</samp></span></li>
+        <li class="list-group-item-text">Description: <span id="kms.regions.{{region}}.keys.{{@key}}.description"><samp>{{value_or_none description}}</samp></span></li>
+        <li class="list-group-item-text">Creation Date: <span id="kms.regions.{{region}}.keys.{{@key}}.creation_date">{{format_date creation_date}}</span></li>
+        <li class="list-group-item-text">Status: <span id="kms.regions.{{region}}.keys.{{@key}}.key_enabled">{{convert_bool_to_enabled key_enabled}}</span></li>
+        <li class="list-group-item-text">Rotation: <span id="kms.regions.{{region}}.keys.{{@key}}.rotation_enabled">{{convert_bool_to_enabled rotation_enabled}}</span></li>
+        <li class="list-group-item-text">Origin: <span id="kms.regions.{{region}}.keys.{{@key}}.origin"><samp>{{value_or_none origin}}</samp></span></li>
+        <li class="list-group-item-text">Key Manager: <span id="kms.regions.{{region}}.keys.{{@key}}.key_manager"><samp>{{value_or_none key_manager}}</samp></span></li>
+      </ul>
+    </div>
+    <div class="list-group-item">
+      {{#if aliases.length}}
+      <h4 class="list-group-item-heading accordion-heading">Aliases</h4>
+      <ul>
+        {{#each this.aliases}}
+        <li><samp>{{name}}</samp></li>
+        {{/each}}
+      </ul>
+      {{else}}
+      <h4 class="list-group-item-heading accordion-heading text-secondary">Aliases</h4>
+      {{/if}}
+    </div>
+    <div class="list-group-item">
+    {{#if policy}}
+      {{> accordion_policy name = 'Key Policy' document = policy policy_path = (concat 'kms.regions' region 'keys' @key 'policy')}}
+    {{else}}
+      <h4 class="list-group-item-heading accordion-heading text-secondary">Key Policy</h4>
+    {{/if}}
+    </div>
+  {{/unless}}
+</script>
+<script>
+  Handlebars.registerPartial("services.kms.regions.id.keys", $("#services\\.kms\\.regions\\.id\\.keys\\.partial").html());
+</script>
+
+<!-- Single KMS instance template -->
+<script id="single_kms_key-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.kms.regions.id.keys' }}
+</script>
+<script>
+    var single_kms_key_template = Handlebars.compile($("#single_kms_key-template").html());
+</script>
+
+    <!-- RDS parameter group partial -->
+    <script id="services.rds.regions.id.parameter_groups.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">Information</h4>
+            <div class="list-group-item-text">Group family: {{DBParameterGroupFamily}}</div>
+            <div class="list-group-item-text">Description: {{Description}}</div>
+            <div class="list-group-item-text">ARN: {{arn}}</div>
+        </div>
+        <div class="list-group-item">
+            <div class="accordion">
+                <h4 class="list-group-item-heading accordion-heading">Parameters</h4>
+                <div class="accordion-body item-margin">
+                    <div class="accordion-inner">
+                        <table class="table-striped" width="100%" >
+                            <tr>
+                                <td width="20%">Name</td>
+                                <td width="20%">Value</td>
+                                <td width="60%">Description</td>
+                            </tr>
+                            {{#each parameters}}
+                            <tr>
+                                <td width="20%">{{@key}}</td>
+                                <td width="20%">{{ParameterValue}}</td>
+                                <td width="60%">{{Description}}</td>
+                            </tr>
+                            {{/each}}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.rds.regions.id.parameter_groups", $("#services\\.rds\\.regions\\.id\\.parameter_groups\\.partial").html());
+    </script>
+
+
+    <!-- RDS security group partials -->
+    <script id="services.rds.regions.id.security_groups.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Information</h4>
+          <div class="list-group-item-text item-margin">Description: {{DBSecurityGroupDescription}}</div>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Authorizations</h4>
+          <ul>
+            {{#each EC2SecurityGroups}}
+              <li class="list-group-item-text">
+                {{EC2SecurityGroupName}} ({{EC2SecurityGroupId}}) @ {{EC2SecurityGroupOwnerId}} ({{Status}})
+              </li>
+            {{/each}}
+            {{#each IPRanges}}
+              <li class="list-group-item-text">{{CIDRIP}} ({{Status}})</li>
+            {{/each}}
+          </ul>
+        </div>
+    </script>
+    <script>
+        Handlebars.registerPartial("services.rds.regions.id.security_groups", $("#services\\.rds\\.regions\\.id\\.security_groups\\.partial").html());
+    </script>
+
+
+    <!-- RDS instance partial -->
+    <script id="services.rds.regions.id.vpcs.id.instances.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4>Information</h4>
+          <ul>
+            <li class="list-group-item-text">Region: {{region}}</li>
+            <li class="list-group-item-text">Engine: {{Engine}}</li>
+            <li class="list-group-item-text">Status: {{makeTitle DBInstanceStatus}}</li>
+            <li class="list-group-item-text">Is read replica: {{is_read_replica}}</li>
+            <li class="list-group-item-text">Auto Minor Version Upgrade: <span id="rds.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.AutoMinorVersionUpgrade">{{#if AutoMinorVersionUpgrade}} Enabled {{else}} Disabled {{/if}}</span></li>
+            <li class="list-group-item-text">Multi Availability Zones: <span id="rds.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.MultiAZ">{{#if MultiAZ}} Enabled {{else}} Disabled {{/if}}</span></li>
+            <li class="list-group-item-text">Instance Class: <span id="rds.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.DBInstanceClass">{{DBInstanceClass}}</span></li>
+            <li class="list-group-item-text">Created on: {{InstanceCreateTime}}</li>
+            <li class="list-group-item-text">Backup retention period in days: <span id="rds.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.BackupRetentionPeriod">{{BackupRetentionPeriod}}</span>
+            <li class="list-group-item-text">Publicly accessible: <span id="rds.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.instance_publicly_accessible">{{PubliclyAccessible}}</span>
+            <li class="list-group-item-text">Enhanced Monitoring:
+              <span id="rds.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.EnhancedMonitoringResourceArn">{{#if EnhancedMonitoringResourceArn}} Enabled {{else}} Disabled {{/if}}</span>
+            </li>
+            <li class="list-group-item-text">Encrypted Storage: <span id="rds.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.StorageEncrypted">{{StorageEncrypted}}</span></li>
+            <li class="list-group-item-text">CA Certificate: <span id="rds.regions.{{region}}.vpcs.{{vpc}}.instances.{{@key}}.CACertificateIdentifier">{{CACertificateIdentifier}}</span></li>
+          </ul>
+        </div>
+        <div class="list-group-item">
+          <h4>Network</h4>
+          <ul>
+            <li class="list-group-item-text">Endpoint: {{Endpoint.Address}}:{{Endpoint.Port}}</li>
+            <li class="list-group-item-text">Publicly accessible: {{PubliclyAccessible}}</li>
+          </ul>
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.rds.regions.id.vpcs.id.instances", $("#services\\.rds\\.regions\\.id\\.vpcs\\.id\\.instances\\.partial").html());
+    </script>
+
+    <!-- Single RDS instance template -->
+    <script id="single_rds_instance-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.rds.regions.id.vpcs.id.instances'}}
+    </script>
+    <script>
+        var single_rds_instance_template = Handlebars.compile($("#single_rds_instance-template").html());
+    </script>
+
+    <!-- RDS snapshot partial -->
+    <script id="services.rds.regions.id.vpcs.id.snapshots.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4>Information</h4>
+          <ul>
+            <li class="list-group-item-text">RDS Instance: <a href="javascript:showObject('services.rds.regions.{{region}}.vpcs.{{vpc_id}}.instances.{{DBInstanceIdentifier}}')">{{DBInstanceIdentifier}}</a></li>
+            <li class="list-group-item-text">Created on: {{SnapshotCreateTime}}</li>
+            <li class="list-group-item-text">Encrypted: <span id="rds.regions.{{region}}.vpcs.{{vpc_id}}.snapshots.{{@key}}.snapshot-not-encrypted">{{Encrypted}}</span></li>
+            <li class="list-group-item-text">Option group: {{OptionGroupName}}</li>
+          </ul>
+        </div>
+        <div class="list-group-item">
+          <h4>Attributes</h4>
+          <ul>
+            {{#each attributes}}
+              <li class="list-group-item-text">{{AttributeName}}: <span id="rds.regions.{{../region}}.vpcs.{{../vpc_id}}.snapshots.{{@../key}}.attributes.{{@index}}">{{AttributeValues}}</span></li>
+            {{/each}}
+          </ul>
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.rds.regions.id.vpcs.id.snapshots", $("#services\\.rds\\.regions\\.id\\.vpcs\\.id\\.snapshots\\.partial").html());
+    </script>
+
+
+    <!-- RDS subnet group partial -->
+    <script id="services.rds.regions.id.vpcs.id.subnet_groups.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">Attributes</h4>
+            {{> generic_object resource}}
+        </div>
+    </script>
+    <script>
+        Handlebars.registerPartial("services.rds.regions.id.vpcs.id.subnet_groups", $("#services\\.rds\\.regions\\.id\\.vpcs\\.id\\.subnet_groups\\.partial").html());
+    </script>
+
+<!-- Redshift parameter group partial -->
+
+<script id="services.redshift.regions.id.parameter_groups.partial" type="text/x-handlebars-template">
+    <div class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <div class="list-group-item-text item-margin">Description: <samp>{{description}}</samp></div>
+        <div class="list-group-item-text item-margin">Group Family: <samp>{{family}}</samp></div>
+        <div class="list-group-item-text item-margin">Default Parameter Group: <samp>{{is_default}}</samp></div>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Parameters</h4>
+        <ul>
+            {{#each parameters}}
+            <li class="list-group-item-text"><samp>{{@key}}</samp>:
+                <span id="redshift.regions.{{../region}}.parameter_groups.{{@../key}}.{{@key}}"><samp>{{value}}</samp></span>
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+</script>
+<script>
+    Handlebars.registerPartial("services.redshift.regions.id.parameter_groups", $("#services\\.redshift\\.regions\\.id\\.parameter_groups\\.partial").html());
+</script>
+
+
+    <!-- Redshift cluster partial -->
+    <script id="services.redshift.regions.id.vpcs.id.clusters.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Information</h4>
+          <ul>
+            <li class="list-group-item-text">Node Type: {{NodeType}}</li>
+            <li class="list-group-item-text">Allow Version Upgrade: <span id="redshift.regions.{{region}}.vpcs.{{vpc}}.clusters.{{name}}.AllowVersionUpgrade">{{AllowVersionUpgrade}}</span><li>
+            <li class="list-group-item-text">Automated Snapshot Retention Period: {{AutomatedSnapshotRetentionPeriod}}</li>
+            <li class="list-group-item-text">Created at: {{ClusterCreateTime}}</li>
+            <li class="list-group-item-text">Availability Zone: {{AvailabilityZone}}</li>
+            <li class="list-group-item-text">Encrypted: <span id="redshift.regions.{{region}}.vpcs.{{vpc}}.clusters.{{name}}.Encrypted">{{Encrypted}}</span></li>
+            <li class="list-group-item-text">Cluster Parameter Groups:
+              <ul>
+                {{#each ClusterParameterGroups}}
+                  <li>{{ParameterGroupName}}</li>
+                {{/each}}
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Network</h4>
+          <ul>
+            <li class="list-group-item-text">Endpoint: {{Endpoint.Address}}:{{Endpoint.Port}}</li>
+            <li class="list-group-item-text">Publicly accessible: <span id="redshift.regions.{{region}}.vpcs.{{vpc}}.clusters.{{name}}.PubliclyAccessible">{{PubliclyAccessible}}</span></li>
+            <li class="list-group-item-text">VPC: {{VpcId}}</li>
+            <li class="list-group-item-text">Subnet: {{ClusterSubnetGroupName}}</li>
+            <li class="list-group-item-text">Security groups:
+              <ul>
+                {{#each VpcSecurityGroups}}
+                  <li>{{VpcSecurityGroupId}}: {{Status}}</li>
+                {{/each}}
+                {{#each ClusterSecurityGroups}}
+                  <li>{{ClusterSecurityGroupName}}: {{Status}}</li>
+                {{/each}}
+              </ul>
+            </li>
+          </ul>
+        </div>
+        {{!--
+        {{> accordion service_name = 'redshift' resource_type = 'clusters' resource_id = name member_type = 'Nodes' members = ClusterNodes member_partial_name = 'services.redshift.regions.vpcs.cluster_nodes'}}
+        --}}
+    </script>
+    <script>
+        Handlebars.registerPartial("services.redshift.regions.id.vpcs.id.clusters", $("#services\\.redshift\\.regions\\.id\\.vpcs\\.id\\.clusters\\.partial").html());
+    </script>
+
+
+    <!-- Redshift security group partials -->
+    <script id="services.redshift.regions.id.vpcs.id.security_groups.partial" type="text/x-handlebars-template">
+        <div class="list-group-item active">
+          <h4 class="list-group-item-heading">{{resource_key}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Information</h4>
+          <div class="list-group-item-text item-margin">Description: {{Description}}</div>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Rules</h4>
+          <ul>
+            {{#if IPRanges}}
+              <li class="list-group-item-text">IP addresses:</li>
+              <ul>
+                {{#each IPRanges}}
+                  <li class="list-group-item-text">{{CIDRIP}}: <span id="services.redshift.regions.vpcs.security_groupss-all-ips-authorized-{{../resource_key}}">{{Status}}</span></li>
+                {{/each}}
+              </ul>
+            {{/if}}
+            {{#if EC2SecurityGroups}}
+              <li class="list-group-item-text">EC2 security groups:</li>
+              <ul>
+                {{#each EC2SecurityGroups}}
+                  <li class="list-group-item-text">{{EC2SecurityGroupName}} (AWS account ID {{UserId}}): {{Status}}</li>
+                {{/each}}
+              </ul>
+            {{/if}}
+          </ul>
+        </div>
+    </script>
+    <script>
+        Handlebars.registerPartial("services.redshift.regions.id.vpcs.id.security_groups", $("#services\\.redshift\\.regions\\.id\\.vpcs\\.id\\.security_groups\\.partial").html());
+    </script>
+
+    <!-- Redshift node partial -->
+    <script id="services.redshift.regions.vpcs.cluster_nodes.partial" type="text/x-handlebars-template">
+      {{NodeRole}}: {{PrivateIPAddress}} / {{PublicIPAddress}}
+    </script>
+    <script>
+        Handlebars.registerPartial("services.redshift.regions.vpcs.cluster_nodes", $("#services\\.redshift\\.regions\\.vpcs\\.cluster_nodes\\.partial").html());
+    </script>
+
+<!-- route53 domains -->
+<script id="services.route53.regions.id.domains.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <div class="list-group-item-text item-margin">Auto Renew: <span
+                id="route53.regions.id.domains.{{@key}}.auto_renew"><samp>{{convert_bool_to_enabled auto_renew}}</samp></span>
+        </div>
+        <div class="list-group-item-text item-margin">Transfer Lock:
+            <span id="route53.regions.id.domains.{{@key}}.transfer_lock"><samp>{{convert_bool_to_enabled transfer_lock}}</samp>
+                <i class="fa fa-exclamation-triangle"></i>
+                <span id="route53.regions.id.domains.{{@key}}.transfer_lock_unauthorized">
+                    This domain's top-level domain (TLD) does not support domain locking.
+                </span>
+            </span>
+        </div>
+        <div class="list-group-item-text item-margin">Expiry:
+            <span id="route53.regions.id.domains.{{@key}}.expiry">{{format_date expiry}}</span></div>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("services.route53.regions.id.domains", $("#services\\.route53\\.regions\\.id\\.domains\\.partial").html());
+</script>
+
+<!-- Single route53 domain template -->
+<script id="single_route53_domain-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.route53.regions.id.domains'}}
+</script>
+<script>
+    var single_route53_domain_template = Handlebars.compile($("#single_route53_domain-template").html());
+</script>
+<!-- route53 hosted_zones -->
+<script id="services.route53.regions.id.hosted_zones.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <div class="list-group-item-text item-margin">ID: <span id="route53.regions.id.hosted_zones.{{@key}}.id"><samp>{{value_or_none id}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Caller Reference: <span id="route53.regions.id.hosted_zones.{{@key}}.caller_reference"><samp>{{value_or_none caller_reference}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Resource Record Set Count: <span id="route53.regions.id.hosted_zones.{{@key}}.resource_record_set_count"><samp>{{value_or_none resource_record_set_count}}</samp></span></div>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("services.route53.regions.id.hosted_zones", $("#services\\.route53\\.regions\\.id\\.hosted_zones\\.partial").html());
+</script>
+
+<!-- Single route53 hosted_zone template -->
+<script id="single_route53_hosted_zone-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.route53.regions.id.hosted_zones'}}
+</script>
+<script>
+    var single_route53_hosted_zone_template = Handlebars.compile($("#single_route53_hosted_zone-template").html());
+</script>
+    <script id="services.s3.acls.partial" type="text/x-handlebars-template">
+        <div class="list-group-item">
+          <div class="accordion">
+          <h4 class="list-group-item-heading">{{makeTitle resource_type}} ACLs</h4>
+          <div class="accordion-body item-margin">
+            <div class="accordion-inner">
+              <table class="table-striped" >
+                <tr class="table-padding">
+                  <td width="20%" class="text-center well"></td>
+                  <td width="20%" class="text-center well">List</td>
+                  <td width="20%" class="test-center well">Upload/Delete</td>
+                  <td width="20%" class="text-center well">View<br>Permissions</td>
+                  <td width="20%" class="text-center well">Edit<br>Permissions</td>
+                </tr>
+                {{#each grantees}}
+                <tr>
+                  <td width="20%" class="text-center bucket-name table-hover" onclick="toggleName(this)">{{DisplayName}}</td>
+                  <td width="20%" class="text-center">
+                    {{#if permissions.read}}
+                    <i id="{{../../resource_path}}.grantees.{{@key}}.read" class="fa fa-check"></i>
+                    {{else}}
+                    <i id="{{../../resource_path}}.grantees.{{@key}}.read" class="fa fa-times"></i>
+                    {{/if}}
+                  </td>
+                  <td width="20%" class="text-center">
+                    {{#if permissions.write}}
+                    <i id="{{../../resource_path}}.grantees.{{@key}}.write" class="fa fa-check"></i>
+                    {{else}}
+                    <i id="{{../../resource_path}}.grantees.{{@key}}.write" class="fa fa-times"></i>
+                    {{/if}}
+                  </td>
+                  <td width="20%" class="text-center">
+                    {{#if permissions.read_acp}}
+                    <i id="{{../../resource_path}}.grantees.{{@key}}.read_acp" class="fa fa-check"></i>
+                    {{else}}
+                    <i id="{{../../resource_path}}.grantees.{{@key}}.read_acp" class="fa fa-times"></i>
+                    {{/if}}
+                  </td>
+                  <td width="20%" class="text-center">
+                    {{#if permissions.write_acp}}
+                    <i id="{{../../resource_path}}.grantees.{{@key}}.write_acp" class="fa fa-check"></i>
+                    {{else}}
+                    <i id="{{../../resource_path}}.grantees.{{@key}}.write_acp" class="fa fa-times"></i>
+                    {{/if}}
+                  </td>
+                </tr>
+                {{/each}}
+              </table>
+            </div>
+          </div>
+          </div>
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.s3.acls", $("#services\\.s3\\.acls\\.partial").html());
+    </script>
+
+
+    <!-- List of IAM policies referring a given bucket -->
+    <script id="services.s3.bucket_iam_policies.partial" type="text/x-handlebars-template">
+        {{#if resource_type}}
+          <div class="list-group-item">
+            <div class="accordion">
+              <h4 class="list-group-item-heading accordion-heading">{{makeTitle resource_type}} with access via IAM policies</h4>
+              <div id="s3_iam_{{resource_type}}_policies_details-{{escape_special_chars ../name}}" class="accordion-body item-margin">
+                <div class="accordion-inner">
+                  <table class="table-striped" width="100%" >
+                    <tr>
+                      <td width="40%">{{makeTitle ../resource_type}} name</td>
+                      <td width="40%" class="text-center">Policy name</td>
+                      <td width="20%" class="text-center">Condition?</td>
+                    </tr>
+                    {{#each (lookup . resource_type)}}
+                      {{#each policies}}
+                        <tr>
+                        <td width="40%"><a href="javascript:showObject('services.iam.{{../../resource_type}}.{{@../key}}')">
+                          {{getValueAt 'services.iam' ../../resource_type @../key 'name'}}
+                        </a></td>
+                        <td width="40%" class="text-center">
+                          <a href="javascript:showIAMManagedPolicy('{{@key}}')">{{getValueAt 'services.iam.policies' @key 'name'}}</a>
+                        </td>
+                        <td width="20%" class="text-center">
+                          {{has_condition  this}}
+                        </td>
+                        </tr>
+                      {{/each}}
+                      {{#each inline_policies}}
+                        <tr>
+                        <td width="40%"><a href="javascript:showObject('services.iam.{{../../resource_type}}.{{@../key}}')">
+                          {{getValueAt 'services.iam' ../../resource_type @../key 'name'}}
+                        </a></td>
+                        <td width="40%" class="text-center">
+                          <a href="javascript:showIAMInlinePolicy('{{../../resource_type}}', '{{@../key}}', '{{@key}}')">
+                            {{getValueAt 'services.iam' ../../resource_type @../key 'inline_policies' @key 'name'}}
+                          </a>
+                        </td>
+                        <td width="20%" class="text-center">
+                          {{has_condition  this}}
+                        </td>
+                        </tr>
+                      {{/each}}
+                    {{/each}}
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        {{/if}}
+    </script>
+    <script>
+        Handlebars.registerPartial("services.s3.bucket_iam_policies", $("#services\\.s3\\.bucket_iam_policies\\.partial").html());
+    </script>
+
+    <!-- S3 bucket partial -->
+    <script id="services.s3.buckets.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Information</h4>
+          <div class="list-group-item-text item-margin">Region: {{region}}</div>
+          <div class="list-group-item-text item-margin">Creation date: {{CreationDate}}</div>
+          <div class="list-group-item-text item-margin">Logging: <span id="s3.buckets.{{@key}}.logging">{{has_logging? logging}}</span></div>
+          <div class="list-group-item-text item-margin">Default encryption: <span id="s3.buckets.{{@key}}.default_encryption_enabled">{{ convert_bool_to_enabled default_encryption_enabled}}</span></div>
+          <div class="list-group-item-text item-margin">Versioning: <span id="s3.buckets.{{@key}}.versioning">{{convert_bool_to_enabled versioning_status_enabled}}</span></div>
+          <div class="list-group-item-text item-margin">MFA Delete: <span id="s3.buckets.{{@key}}.mfa_delete">{{convert_bool_to_enabled version_mfa_delete_enabled}}</span></div>
+          <div class="list-group-item-text item-margin">Secure transport: <span id="s3.buckets.{{@key}}.secure_transport_enabled">{{convert_bool_to_enabled secure_transport_enabled}}</span></div>
+          <div class="list-group-item-text item-margin">Static website hosting: <span id="s3.buckets.{{@key}}.web_hosting_enabled">{{convert_bool_to_enabled web_hosting_enabled}}</span></div>
+        </div>
+        <div class="list-group-item">
+            {{#if policy}}
+                {{> accordion_policy name = 'Bucket Policy' document = policy policy_path = (concat 's3.buckets' @key 'policy')}}
+            {{else}}
+                <h4 class="list-group-item-heading accordion-heading text-secondary">Bucket Policy</h4>
+            {{/if}}
+        </div>
+        {{> services.s3.acls resource_type = 'bucket' resource_path = (concat 's3.buckets' @key)}}
+        {{> services.s3.bucket_iam_policies resource_type = 'groups' resource_count = groups_count}}
+        {{> services.s3.bucket_iam_policies resource_type = 'roles' resource_count = roles_count}}
+        {{> services.s3.bucket_iam_policies resource_type = 'users' resource_count = users_count}}
+        {{#if keys}}
+          <div class="list-group-item">
+            <div class="accordion">
+              <h4 class="list-group-item-heading accordion-heading">Keys
+                {{> count_badge count=keys_count target=(concat '#services.s3.buckets' @key 'keys')}}
+              </h4>
+              <div id="services.s3.buckets.{{@key}}.keys" class="accordion-body item-margin">
+                <div class="accordion-inner">
+                  <table class="table-striped" width="100%" >
+                    <tr>
+                      <td width="80%">Name</td>
+                      <td width="10%" class="text-center">Encrypted</td>
+                      <td width="10%" class="text-center">Perms</td>
+                    </tr>
+                    {{#each keys}}
+                    <tr>
+                      <td width="80%"><a href="javascript:showS3Object('{{@../key}}', '{{@key}}')">{{name}}</a></td>
+                      <td width="10%" class="text-center">
+                        <span id="s3.buckets.{{@../key}}.keys.{{@key}}.unencrypted">
+                          {{{good_bad_icon 's3-object-unencrypted' @../key @key 'ServerSideEncryption'}}}
+                        </span>
+                      </td>
+                      <td width="10%" class="text-center">
+                        <span id="s3.buckets.{{@../key}}.keys.{{@key}}.grantees">
+                          {{{good_bad_icon 's3-object-acls-mismatch-bucket' @../key @key 'grantees'}}}
+                        </span>
+                      </td>
+                    </tr>
+                    {{/each}}
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        {{/if}}
+    </script>
+    <script>
+      Handlebars.registerPartial("services.s3.buckets", $("#services\\.s3\\.buckets\\.partial").html());
+    </script>
+
+    <!-- Single S3 bucket template -->
+    <script id="single_s3_bucket-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.s3.buckets' }}
+    </script>
+    <script>
+        var single_s3_bucket_template = Handlebars.compile($("#single_s3_bucket-template").html());
+    </script>
+
+
+    <!-- S3 object partial -->
+    <script id="services.s3.buckets.objects.partial" type="text/x-handlebars-template">
+      <div class="list-group" id="services.s3.buckets.objects.{{name}}.details">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{getValueAt 'services.s3.buckets' bucket_id 'name'}}/{{getValueAt 'services.s3.buckets' bucket_id 'keys' key_id 'name'}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Information</h4>
+          <div class="list-group-item-text">
+            <ul class="no-bullet">
+              <li>Server-side encryption: {{{good_bad_icon 's3-object-unencrypted' bucket_id key_id 'ServerSideEncryption'}}}</li>                          
+              <li>Permissions match bucket's: {{{good_bad_icon 's3-object-acls-mismatch-bucket' bucket_id key_id 'grantees'}}}</li>
+            </ul>
+          </div>
+        </div>
+        {{> services.s3.acls resource_type = 'object' resource_path = (concat 's3.buckets' bucket_id 'keys' key_id)}}
+      </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.s3.buckets.objects", $("#services\\.s3\\.buckets\\.objects\\.partial").html());
+    </script>
+
+    <!-- Single S3 object template -->
+    <script id="single_s3_object-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.s3.buckets.objects'}}
+    </script>
+    <script>
+      var single_s3_object_template = Handlebars.compile($("#single_s3_object-template").html());
+    </script>
+
+<!-- secretsmanager secrets -->
+<script id="services.secretsmanager.regions.id.secrets.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <div class="list-group-item-text item-margin">Name: <span id="secretsmanager.regions.{{region}}.secrets.{{@key}}.name"><samp>{{value_or_none name}}</samp></span></div>
+        <div class="list-group-item-text item-margin">ARN: <span id="secretsmanager.regions.{{region}}.secrets.{{@key}}.arn"><samp>{{value_or_none arn}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Description: <span id="secretsmanager.regions.{{region}}.secrets.{{@key}}.description"><samp>{{value_or_none description}}</samp></span></div>
+        <div class="list-group-item-text item-margin">Last Changed Date: <span id="secretsmanager.regions.{{region}}.secrets.{{@key}}.last_changed_date"><samp>{{format_date last_changed_date}}</samp></span></div>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("services.secretsmanager.regions.id.secrets", $("#services\\.secretsmanager\\.regions\\.id\\.secrets\\.partial").html());
+</script>
+
+<!-- Single secretsmanager secret template -->
+<script id="single_secretsmanager_secret-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.secretsmanager.regions.id.secrets'}}
+</script>
+<script>
+    var single_secretsmanager_secret_template = Handlebars.compile($("#single_secretsmanager_secret-template").html());
+</script>
+
+    <!-- SES queue partial -->
+    <script id="services.ses.regions.id.identities.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">DKIM Configuration</h4>
+            <div class="list-group-item-text item-margin">Enabled: {{DkimEnabled}}</div>
+            <div class="list-group-item-text item-margin">Verification Status: {{DkimVerificationStatus}}</div>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Policies</h4>
+          {{#each policies}}
+              {{> accordion_policy name = @key policy_path = (concat 'ses.regions' region 'identities' @../key 'policies' @index) document = this}}
+          {{/each}}
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.ses.regions.id.identities", $("#services\\.ses\\.regions\\.id\\.identities\\.partial").html());
+    </script>
+
+    <!-- Single SES queue template -->
+    <script id="single_ses_queue-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.ses.regions.id.identities'}}
+    </script>
+    <script>
+        var single_ses_queue_template = Handlebars.compile($("#single_ses_queue-template").html());
+    </script>
+
+    <!-- SNS topic partial -->
+    <script id="services.sns.regions.id.topics.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Information</h4>
+          <div class="list-group-item-text item-margin">Region: {{region}}</div>
+          <div class="list-group-item-text item-margin">ARN: {{arn}}</div>
+          <div class="list-group-item-text item-margin">Display name: {{DisplayName}}</div>
+        </div>
+        {{#if Policy}}
+          <div class="list-group-item">
+            {{> accordion_policy name = 'Access Control Policy' policy_path = (concat 'sns.regions' region 'topics' @key 'Policy') document = Policy}}
+          </div>
+        {{/if}}
+        {{#if DeliveryPolicy}}
+          <div class="list-group-item">
+            {{> accordion_policy name = 'Delivery Policy' policy_path = (concat 'sns.regions' region 'topics' @key 'DeliveryPolicy') document = DeliveryPolicy}}
+          </div>
+        {{/if}}
+        {{#if EffectiveDeliveryPolicy}}
+          <div class="list-group-item">
+            {{> accordion_policy name = 'Effective delivery policy' policy_path = (concat 'sns.regions' region 'topics' @key 'EffectiveDeliveryPolicy') document = EffectiveDeliveryPolicy}}
+          </div>
+        {{/if}}
+        <div class="list-group-item">
+          <div class="accordion">
+            <h4 class="list-group-item-heading accordion-heading">Subscriptions
+                {{> count_badge count=subscriptions_count}}
+            </h4>
+            <div id="sns.regions.{{region}}.topics.{{@key}}.subscriptions" class="accordion-body collapse">
+              <div class="accordion-inner">
+                <ul>
+                {{#each subscriptions.protocol}}
+                  <li>{{makeTitle @key}}</li>
+                  <ul>
+                    {{#each this}}
+                       <li>Endpoint: {{Endpoint}}</li>
+                    {{/each}}
+                  </ul>
+                {{/each}}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.sns.regions.id.topics", $("#services\\.sns\\.regions\\.id\\.topics\\.partial").html());
+    </script>
+
+    <!-- Single SNS topic template -->
+    <script id="single_sns_topic-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.sns.regions.id.topics'}}
+    </script>
+    <script>
+        var single_sns_topic_template = Handlebars.compile($("#single_sns_topic-template").html());
+    </script>
+
+    <!-- SNS queue partial -->
+    <script id="services.sqs.regions.id.queues.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading">Information</h4>
+          <div class="list-group-item-text item-margin">Region: {{region}}</div>
+          <div class="list-group-item-text item-margin">ARN: {{arn}}</div>
+          <div class="list-group-item-text item-margin">KMS master key id: <span id="sqs.regions.{{region}}.queues.{{@key}}.server-side-encryption-disabled">
+              {{#if kms_master_key_id}} {{kms_master_key_id}} {{else}} None {{/if}}
+            </span></div>
+          <div class="list-group-item-text item-margin">Created on: {{CreatedTimestamp}}</div>
+        </div>
+        {{#if Policy.Statement.length}}
+          <div class="list-group-item">
+            {{> accordion_policy name = 'Access Control Policy' policy_path = (concat 'sqs.regions' region 'queues' @key 'Policy') document = Policy}}
+          </div>
+        {{/if}}
+    </script>
+    <script>
+      Handlebars.registerPartial("services.sqs.regions.id.queues", $("#services\\.sqs\\.regions\\.id\\.queues\\.partial").html());
+    </script>
+
+    <!-- Single SNS queue template -->
+    <script id="single_sqs_queue-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.sqs.regions.id.queues'}}
+    </script>
+    <script>
+        var single_sqs_queue_template = Handlebars.compile($("#single_sqs_queue-template").html());
+    </script>
+
+<!-- Stackdriver Logging sinks partial -->
+<script id="services.stackdriverlogging.sinks.partial" type="text/x-handlebars-template">
+    <div id="resource-name" class="list-group-item active">
+        <h4 class="list-group-item-heading">{{name}}</h4>
+    </div>
+    <div class="list-group-item">
+        <h4 class="list-group-item-heading">Information</h4>
+        <div class="list-group-item-text item-margin">Name: <span id="stackdriverlogging.sinks.{{@key}}.name">{{name}}</span></div>
+        <div class="list-group-item-text item-margin">Filter: <span id="stackdriverlogging.sinks.{{@key}}.filter"><code>{{filter}}</code></span></div>
+        <div class="list-group-item-text item-margin">Destination: <span id="stackdriverlogging.sinks.{{@key}}.destination"><code>{{destination}}</code></span></div>
+    </div>
+</script>
+
+<script>
+    Handlebars.registerPartial("services.stackdriverlogging.sinks", $("#services\\.stackdriverlogging\\.sinks\\.partial").html());
+</script>
+
+<!-- Single stackdriverlogging sink template -->
+<script id="single_stackdriverlogging_sink-template" type="text/x-handlebars-template">
+    {{> modal-template template='services.stackdriverlogging.sinks'}}
+</script>
+<script>
+    var single_stackdriverlogging_sink_template = Handlebars.compile($("#single_stackdriverlogging_sink-template").html());
+</script>
+
+    <!-- VPC peering connection partial -->
+    <script id="services.vpc.regions.id.peering_connections.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <div class="list-group-item-text">Status: {{Status.Message}}</div>
+        </div>
+        {{> services.vpc.regions.id.peering_connections.vpc_info vpc_info = RequesterVpcInfo vpc_role = 'Requester'}}
+        {{> services.vpc.regions.id.peering_connections.vpc_info vpc_info = AccepterVpcInfo vpc_role = 'Accepter'}}
+    </script>
+    <script>
+      Handlebars.registerPartial("services.vpc.regions.id.peering_connections", $("#services\\.vpc\\.regions\\.id\\.peering_connections\\.partial").html());
+    </script>
+
+    <!-- VPC info (accepter & requester) info -->
+    <script id="services.vpc.regions.id.peering_connections.vpc_info" type="text/x-handlebars-template">
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">{{vpc_role}} VPC</h4>
+            <ul>
+                <li class="list-group-item-text">Account Id: {{vpc_info.OwnerId}}</li>
+                <li class="list-group-item-text">VPC Id: {{vpc_info.VpcId}}</li> 
+                <li class="list-group-item-text">CIDR: {{vpc_info.CidrBlock}}</li>
+                {{#if vpc_info.PeeringOptions}}
+                <li class="list-group-item-text">Peering options:
+                    <ul>
+                        {{#each vpc_info.PeeringOptions}}
+                            <li class="list-group-item-text">{{@key}}: {{this}}</li>
+                        {{/each}}
+                    </ul>
+                </li>
+                {{/if}}
+            </ul>
+        </div>
+    </script>
+    <script>
+        Handlebars.registerPartial("services.vpc.regions.id.peering_connections.vpc_info", $("#services\\.vpc\\.regions\\.id\\.peering_connections\\.vpc_info").html());
+    </script>
+
+    <!-- Single VPC Subnet template -->
+    <script id="single_vpc_peering_connection-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.vpc.regions.id.peering_connections'}}
+    </script>
+    <script>
+        var single_vpc_peering_connection_template = Handlebars.compile($("#single_vpc_peering_connection-template").html());
+    </script>
+    <!-- VPC partial -->
+    <script id="services.vpc.regions.id.vpcs.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+          <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">Information</h4>
+            <div class="list-group-item-text">ID: <samp>{{@key}}</samp></div>
+            <div class="list-group-item-text">Region: <samp>{{region}}</samp></div>
+            <div class="list-group-item-text">State: <samp>{{state}}</samp></div>
+            <div class="list-group-item-text">CIDR Block: <samp>{{cidr_block}}</samp></div>
+            <div class="list-group-item-text">Default: <samp>{{default}}</samp></div>
+        </div>
+        <div class="list-group-item" style="padding-bottom: 0 !important;">
+          <div class="accordion">
+            <h4 class="list-group-item-heading accordion-heading">Network ACLs
+              {{> count_badge count=(count_vpc_network_acls network_acls) target=(concat '#services.vpc.regions' region 'vpcs' @key 'network_acls')}}
+            </h4>
+            <div id="services.vpc.regions.{{region}}.vpcs.{{@key}}.network_acls" class="accordion-body">
+              <div class="accordion-inner">
+                <ul class="no-bullet">
+                  {{#each network_acls}}
+                    <li><a href="javascript:showObject('services.vpc.regions.{{../region}}.vpcs.{{@../key}}.network_acls.{{@key}}')">{{@key}}</a></li>
+                  {{/each}}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="list-group-item" style="padding-bottom: 0 !important;">
+          <div class="accordion">
+            <h4 class="list-group-item-heading accordion-heading">Instances
+                {{> count_badge count=(count_vpc_instances instances) target=(concat '#services.vpc.regions' region 'vpcs' @key 'instances')}}
+            </h4>
+            <div id="services.vpc.regions.{{region}}.vpcs.{{@key}}.instances" class="accordion-body">
+              <div class="accordion-inner">
+                <ul class="no-bullet">
+                  {{#each instances}}
+                    <li><a href="javascript:showObject('services.vpc.regions.{{../region}}.vpcs.{{@../key}}.instances.{{@key}}')">{{@key}}</a></li>
+                  {{/each}}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="list-group-item" style="padding-bottom: 0 !important">
+            {{> accordion region = region items = peering_connections
+                title = 'Peering Connections'
+                item_partial = 'services.vpc.regions.vpcs.peering_connections'
+                accordion_id = (concat 'services.vpc.regions' region 'vpcs' @key 'peering_connections')
+            }}
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.vpc.regions.id.vpcs", $("#services\\.vpc\\.regions\\.id\\.vpcs\\.partial").html());
+    </script>
+
+    <!-- Single VPC template -->
+    <script id="single_vpc-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.vpc.regions.id.vpcs'}}
+    </script>
+    <script>
+        var single_vpc_template = Handlebars.compile($("#single_vpc-template").html());
+    </script>
+
+
+    <!-- VPC Flow log partial -->
+    <script id="services.vpc.regions.id.vpcs.id.flow_logs.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <div class="list-group-item-text">Attached resource: {{ResourceId}}</div>
+            <div class="list-group-item-text">Traffic type: {{TrafficType}}</div>
+            <div class="list-group-item-text">Status: {{FlowLogStatus}}</div>
+            <div class="list-group-item-text">Log group: {{LogGroupName}}</div>
+            {{#if delivery_role}}
+                <div class="list-group-item-text">Delivery role: <a href="javascript:showObject('services.iam.roles.{{delivery_role.id}}')">{{delivery_role.name}}</a></div>
+            {{else}}
+                <div class="list-group-item-text">Delivery role: {{DeliverLogsPermissionArn}}</div>
+            {{/if}}
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.vpc.regions.id.vpcs.id.flow_logs", $("#services\\.vpc\\.regions\\.id\\.vpcs\\.id\\.flow_logs\\.partial").html());
+    </script>
+
+    <!-- Single VPC Subnet template -->
+    <script id="single_vpc_flow_log-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.vpc.regions.id.vpcs.id.flow_logs'}}
+    </script>
+    <script>
+        var single_vpc_flow_log_template = Handlebars.compile($("#single_vpc_flow_log-template").html());
+    </script>
+
+    <!-- VPC Network ACL partial -->
+    <script id="services.vpc.regions.id.vpcs.id.network_acls.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">Information</h4>
+            <div class="list-group-item-text item-margin">ID: <samp>{{id}}</samp></div>
+            <div class="list-group-item-text item-margin">Default: <samp>{{IsDefault}}</samp></div>
+        </div>
+        {{#each rules}}
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading">{{makeTitle @key}} rules</h4>
+                <table class="table-striped" width="100%">
+                    <tr>
+                        <td width="20%" class="text-center">Rule number</td>
+                        <td width="20%" class="text-center">Port</td>
+                        <td width="20%" class="text-center">Protocol</td>
+                        <td width="20%" class="text-center">IP address</td>
+                        <td width="20%" class="text-center">Action</td>
+                    </tr>
+                    {{#each this}}
+                        <tr id="vpc.regions.{{../../region}}.vpcs.{{../../vpc}}.network_acls.{{@../../key}}.{{@../key}}.{{@key}}">
+                            <td width="20%" class="text-center">{{@key}}</td>
+                            <td width="20%" class="text-center">{{port_range}}</td>
+                            <td width="20%" class="text-center">{{protocol}}</td>
+                            <td width="20%" class="text-center">{{CidrBlock}}</td>
+                            <td width="20%" class="text-center">{{RuleAction}}</td>
+                        </tr>
+                    {{/each}}
+                </table>
+            </div>
+        {{/each}}
+        <div class="list-group-item">
+            <h4 class="list-group-item-heading">Associated Subnets</h4>
+            {{#if Associations}}
+                <ul>
+                {{#each Associations}}
+                    <li class="list-group-item-text">
+                        {{> resource_link resource_path = (concat 'services.vpc.regions' ../region 'vpcs' ../vpc 'subnets' SubnetId)}}
+                    </li>
+                {{/each}}
+                </ul>
+                {{else}}
+                    {{#unless IsDefault}}
+                        <span id="vpc.regions.{{region}}.vpcs.{{vpc}}.network_acls.{{@key}}.unused" class="finding-hidden item-margin">
+                            <i class="fa fa-exclamation-triangle"></i> This network ACL is not the VPC's default NACL and is not associated with any existing VPC.
+                        </span>
+                    {{/unless}}
+            {{/if}}
+        </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.vpc.regions.id.vpcs.id.network_acls", $("#services\\.vpc\\.regions\\.id\\.vpcs\\.id\\.network_acls\\.partial").html());
+    </script>
+
+    <!-- Single VPC Network ACL template -->
+    <script id="single_vpc_network_acl-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.vpc.regions.id.vpcs.id.network_acls'}}
+    </script>
+    <script>
+        var single_vpc_network_acl_template = Handlebars.compile($("#single_vpc_network_acl-template").html());
+    </script>
+
+
+    <!-- Default accordion item -->
+    <script id="services.vpc.regions.vpcs.peering_connections.partial" type="text/x-handlebars-template">
+        <a href="javascript:showObject('services.vpc.regions.{{region}}.peering_connections.{{item}}')">
+            {{getValueAt (concat 'services.vpc.regions' region 'peering_connections' item 'name')}}
+            ({{getValueAt (concat 'services.vpc.regions' region 'peering_connections' item 'Status.Message')}},
+             {{getValueAt (concat 'services.vpc.regions' region 'peering_connections' item 'peer_info.name')}})
+        </a>
+    </script>
+    <script>
+        Handlebars.registerPartial("services.vpc.regions.vpcs.peering_connections", $("#services\\.vpc\\.regions\\.vpcs\\.peering_connections\\.partial").html());
+    </script>
+    <!-- VPC Subnet partial -->
+    <script id="services.vpc.regions.id.vpcs.id.subnets.partial" type="text/x-handlebars-template">
+        <div id="resource-name" class="list-group-item active">
+            <h4 class="list-group-item-heading">{{name}}</h4>
+        </div>
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading">Information</h4>
+                {{#ifEqual name id}}
+                <div class="list-group-item-text">Name: <samp>None</samp></div>
+                {{else}}
+                <div class="list-group-item-text">Name: <samp>{{name}}</samp></div>
+                {{/ifEqual}}
+                <div class="list-group-item-text">ID: <samp>{{id}}</samp></div>
+                <div class="list-group-item-text">VPC ID: <samp>{{VpcId}}</samp></div>
+                <div class="list-group-item-text">Availability Zone: <samp>{{AvailabilityZone}}</samp></div>
+                <div class="list-group-item-text">CIDR Block: <samp>{{CidrBlock}}</samp></div>
+                <div class="list-group-item-text">IPv6 CIDR Block: {{value_or_none CidrBlockv6}}</div>
+                <div class="list-group-item-text">Public IP on Launch: {{convert_bool_to_enabled MapPublicIpOnLaunch}}</div>
+            </div>
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading accordion-heading">Instances
+                    {{> count_badge count=instances.length}}
+                </h4>
+                <ul>
+                    {{#each instances}}
+                        <li class="list-group-item-text"><a href="javascript:showObject('services.ec2.regions.{{../region}}.vpcs.{{../vpc}}.instances.{{this}}')">
+                        {{getValueAt 'services.ec2.regions' ../region 'vpcs' ../vpc 'instances' this 'name'}}
+                        </a></li>
+                    {{/each}}
+                </ul>
+            </div>
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading accordion-heading">Flow logs
+                    {{> count_badge count=flow_logs.length}}
+                </h4>
+                <ul>
+                    {{#each flow_logs}}
+                        <li><a href="javascript:showObject('services.vpc.regions.{{../region}}.flow_logs.{{this.name}}')">{{this.name}}</a></li>
+                    {{/each}}
+                </ul>
+            </div>
+    </script>
+    <script>
+      Handlebars.registerPartial("services.vpc.regions.id.vpcs.id.subnets", $("#services\\.vpc\\.regions\\.id\\.vpcs\\.id\\.subnets\\.partial").html());
+    </script>
+
+    <!-- Single VPC Subnet template -->
+    <script id="single_vpc_subnet-template" type="text/x-handlebars-template">
+        {{> modal-template template='services.vpc.regions.id.vpcs.id.subnets'}}
+    </script>
+    <script>
+        var single_vpc_subnet_template = Handlebars.compile($("#single_vpc_subnet-template").html());
+    </script>
+<!-- Template for network attack surface -->
+<script id="attack_surface.partial" type="text/x-handlebars-template">
+  <div class="list-group" id="services.{{service}}.attack_surface.details">
+    <div class="list-group" id="services.{{service}}.attack_surface.view">
+       <div class="list-group" id="{{service}}_attack_surfaces.list">
+         <div class="row list-group-item active">
+           <div class="col-sm-6"><h4>Public IP/DNS</h4></div>
+           <div class="col-sm-6"><h4>Open ports</h4></div>
+         </div>
+         {{#each items}}
+           <div class="row list-group-item">
+             <div class="col-sm-6">{{@key}}</div>
+             <div class="col-sm-6">
+               <ul>
+               {{#each protocols ip = @key}}
+                 <li class="list-group-item-text">{{@key}}</li>
+                 <ul>
+                 {{#each ports}}
+                   <li>{{@key}}</li>
+                   {{> ip_grants items = cidrs}}
+                 {{/each}}
+                 </ul>
+               {{/each}}
+               </ul>
+             </div>
+           </div>
+         {{/each}}
+       </div>
+    </div>
+  </div>
+</script>
+<script>
+    Handlebars.registerPartial("attack_surface", $("#attack_surface\\.partial").html());
+</script>
+
+
+
+<!-- Template for network attack surface -->
+<script id="service_groups.compute.summaries.external_attack_surface.details.template" type="text/x-handlebars-template">
+  {{> attack_surface service = 'Compute'}}
+</script>
+
+<!-- Template for network attack surface -->
+<script id="service_groups.database.summaries.external_attack_surface.details.template" type="text/x-handlebars-template">
+  {{> attack_surface service = 'Database'}}
+</script>
+
+<!-- Template for network attack surface -->
+<script id="services.ec2.external_attack_surface.details.template" type="text/x-handlebars-template">
+  {{> attack_surface service = 'ec2'}}
+</script>
+
+<!-- Template for network attack surface -->
+<script id="services.elb.external_attack_surface.details.template" type="text/x-handlebars-template">
+  {{> attack_surface service = 'elb'}}
+</script>
+
+<!-- Template for network attack surface -->
+<script id="services.elbv2.external_attack_surface.details.template" type="text/x-handlebars-template">
+  {{> attack_surface service = 'elbv2'}}
+</script>
+
+
+  <!-- Account password policy -->
+  <script id="services.iam.password_policy.details.template" type="text/x-handlebars-template">
+  <div class="list-group" id="services.iam.password_policy.details">
+  <div class="list-group" id="services.iam.password_policy.view">
+    <div class="list-group-item active">
+      <h4 class="list-group-item-heading">Password policy</h4>
+    </div>
+    <div class="list-group-item">
+    <div class="list-group-item-text item-margin">Minimum password length: <span id="iam.password_policy.MinimumPasswordLength">{{items.MinimumPasswordLength}}</span>
+        {{#ifLooseEqual items.MinimumPasswordLength 1}}
+        <i class="fa fa-exclamation-triangle"></i> It should be noted that 1 character passwords are authorized when no password policy exists, even though the web console displays "6".
+        {{/ifLooseEqual}}
+    </div>
+      <div class="list-group-item-text item-margin">Require at least one uppercase letter: <span id="iam.password_policy.RequireUppercaseCharacters">{{items.RequireUppercaseCharacters}}</span></div>
+      <div class="list-group-item-text item-margin">Require at least one lowercase letter: <span id="iam.password_policy.RequireLowercaseCharacters">{{items.RequireLowercaseCharacters}}</span></div>
+      <div class="list-group-item-text item-margin">Require at least one number: <span id="iam.password_policy.RequireNumbers">{{items.RequireNumbers}}</span></div>
+      <div class="list-group-item-text item-margin">Require at least one non-alphanumeric character: <span id="iam.password_policy.RequireSymbols">{{items.RequireSymbols}}</span></div>
+      <div class="list-group-item-text item-margin">Enable password expiration: <span id="iam.password_policy.ExpirePasswords">{{items.ExpirePasswords}}</span></div>
+      {{#if items.MaxPasswordAge}}
+        <div class="list-group-item-text item-margin">Password expiration period (in days): <span id="iam.password_policy.MaxPasswordAge">{{items.MaxPasswordAge}}</span></div>
+      {{/if}}
+      <div class="list-group-item-text item-margin">Prevent password reuse: <span id="iam.password_policy.PasswordReusePrevention">{{items.PasswordReusePrevention}}</span></div>
+      {{#if items.PreviousPasswordPrevented}}
+        <div class="list-group-item-text item-margin">Number of passwords to remember: <span id="iam.password_policy.PreviousPasswordPrevented">{{items.PreviousPasswordPrevented}}</span></div>
+        <div class="list-group-item-text item-margin">Allow users to change their own password: <span id="iam.password_policy.AllowUsersToChangePassword">{{items.AllowUsersToChangePassword}}</span></div>
+        <div class="list-group-item-text item-margin">Allow users to set a new password after their password has expired: <span id="iam.password_policy.HardExpiry">{{items.HardExpiry}}</span></div>
+      {{/if}}
+    </div>
+  </div></div>
+  </script>
+
+
+<!-- IAM permissions -->
+<script id="services.iam.permissions.details.template" type="text/x-handlebars-template">
+  <div class="list-group" id="services.iam.permissions.details">
+    <div class="list-group" id="services.iam.permissions.view">
+      {{#each items}}
+        <!-- Action / NotAction -->
+        <div class="list-group">
+          <div class="row list-group-item active">
+            <div class="col-sm-4"><h4>{{@key}} Permission</h4></div>
+            <div class="col-sm-8"><h4>Details</h4></div>
+          </div>
+          {{#each this}}
+            <!-- Action value -->
+            <div class="row list-group-item" id="services.iam.permissions">
+              <div class="col-sm-4">{{@key}}</div>
+              <div class="col-sm-8">
+                {{#each this}}
+                  <!-- IAM Resource type -->
+                  {{addMember 'type' @key}}
+                  <div class="list-group-item-text">{{makeTitle @key}}:</div>
+                  <ul>
+                    {{#each this}}
+                      <!-- Effect -->
+                      {{#ifShow @key 'type'}}
+                        <li class="list-group-item-text">{{makeTitle @key}}:</li>
+                        <ul>
+                          {{#each this}}
+                            <div id="services.iam.permissions.{{../../../type}}.{{@key}}"> <!-- filter -->
+                            <!-- IAM Resource ID -->
+                            {{addMember 'name' @key}}
+                            <li class="list-group-item-text"><a href="javascript:showObject('services.iam.{{../../../type}}.{{@key}}')">{{getValueAt 'services.iam' ../../../type @key 'name'}}</a></li>
+                            <ul>
+                              {{#each this}}
+                                <!-- Resource / NotResource -->
+                                {{#ifShow @key 'name'}}
+                                  <li class="list-group-item-text">{{makeTitle @key}}s</li>
+                                  <ul class="no-bullet">
+                                    {{#each this}}
+                                      <!-- Resource ARN -->
+                                      {{addMember 'Resource' @key}}
+                                      {{#each inline_policies}}
+                                        <li>
+                                          {{../Resource}} granted in <a href="javascript:showObject('services.iam.{{../../../../../../../type}}.{{../../../../name}}.inline_policies.{{@key}}')">{{getValueAt 'services.iam' ../../../../../../../type ../../../../name 'inline_policies' @key 'name'}}</a>
+                                          {{#if condition}}
+                                            <ul class="no-bullet">
+                                              <li class="list-group-item-text">Condition: {{condition}}</li>
+                                            </ul>
+                                          {{/if}}
+                                        </li>
+                                      {{/each}}
+                                      {{#each policies}}
+                                        <li>
+                                          {{../Resource}} granted in <a href="javascript:showObject('services.iam.policies.{{@key}}')">{{getValueAt 'services.iam.policies' @key 'name'}}</a>
+                                          {{#if condition}}
+                                            <ul class="no-bullet">
+                                              <li class="list-group-item-text">Condition: {{condition}}</li>
+                                            </ul>
+                                          {{/if}}
+                                        </li>
+                                      {{/each}}
+                                    {{/each}}
+                                  </ul>
+                                {{/ifShow}}
+                              {{/each}}
+                            </ul>
+                            </div>
+                          {{/each}}
+                        </ul>
+                      {{/ifShow}}
+                    {{/each}}
+                  </ul>
+                {{/each}}
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      {{/each}}
+    </div>
+  </div>
+</script>
+<!-- Template for network attack surface -->
+<script id="services.rds.external_attack_surface.details.template" type="text/x-handlebars-template">
+  {{> attack_surface service = 'rds'}}
+</script>
+
+
+<!-- Template for network attack surface -->
+<script id="services.redshift.external_attack_surface.details.template" type="text/x-handlebars-template">
+  {{> attack_surface service = 'redshift'}}
+</script>
+
+
+
+            <div class="modal-backdrop fade show" id="please-wait-backdrop"></div>
+            <div class="modal fade show" tabindex="-1" role="dialog" id="please-wait-modal" style="padding-right: 17px; display: block;" aria-modal="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Please wait</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row list-group-item">
+                                <p>Loading data, this may take a while...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About-run dashboard -->
+            <script id="last_run.details.template" type="text/x-handlebars-template">
+                <h4>
+                    <div class="row std-size" id="last_run.details">
+                        <div class="list-group-item active ml-3">
+                            <div class="list-group-item-heading">Dashboard</div>
+                        </div>
+                        <div class="accordion" id="last_run">
+                            <a class="card">
+                                <div class="card-header card-header-dark">Service
+                                    <div class="col-sm-2 float-right" style="text-align: center">Checks</div>
+                                    <div class="col-sm-2 float-right" style="text-align: center">Findings</div>
+                                    <div class="col-sm-2 float-right" style="text-align: center">Rules</div>
+                                    <div class="col-sm-2 float-right" style="text-align: center">Resources</div>
+                                </div>
+                            </a>
+                            {{#each items.summary}}
+                            <div class="card finding-title finding-title-{{dashboard_color level rules_count rules_count}} plain-link">
+                                <a href="#services.{{@key}}.findings">
+                                    <div class="finding-title card-header">
+                                        <i class="fa finding-badge finding-badge-{{dashboard_color max_level checked_items flagged_items}}"></i>
+                                        {{makeTitle @key}}
+                                        <div class="col-sm-2 float-right" style="text-align: center">{{checked_items}}</div>
+                                        <div class="col-sm-2 float-right" style="text-align: center">{{flagged_items}}</div>
+                                        <div class="col-sm-2 float-right" style="text-align: center">{{rules_count}}</div>
+                                        <div class="col-sm-2 float-right" style="text-align: center">{{resources_count}}</div>
+                                    </div>
+                                </a>
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                </h4>
+            </script>
+
+            <!-- Service-specific dashboards -->
+            <div class="row">
+                <div class="col-sm-12" id="services.id.findings.details">
+                    <script id="services.id.findings.details.template" type="text/x-handlebars-template">
+                        {{#each items}}
+                        {{> dashboard service_name = @key}}
+                        {{/each}}
+                    </script>
+                </div>
+            </div>
+
+        </div> <!-- /container -->
+
+        <!-- Bootstrap core JavaScript, placed at the end of the document so the pages load faster -->
+        <script src="inc-bootstrap/js/bootstrap.min.js"></script>
+
+        <!-- Display dashbord -->
+        <script>
+            loadMetadata();
+        </script>
+
+        <!-- Paging section -->
+        <div id="section_paging-div" style="display:flex;flex-direction:column">
+            <h2 id="section_paging-h2"></h2>
+            <div id="paging_buttons" style="margin:auto">
+                <button id="page_backward" type="button" class="btn btn-secondary" disabled><i class="fa fa-arrow-circle-left"></i> Back</button>
+                <button id="page_forward" type="button" class="btn btn-secondary">Next <i class="fa fa-arrow-circle-right"></i></button>                
+            </div>
+        </div>
+
+        <footer>
+            <div class="row" id="footer">
+                <div>
+                    <p>Scout Suite is an open-source tool released by <a href="https://www.nccgroup.trust" rel="author" target="_blank">NCC Group</a>
+                        <img src="inc-scoutsuite/favicon.ico" rel="icon" type="image/x-icon" alt="Red dot" />
+                    </p>                
+                </div>
+            </div>
+        </footer>
+
+        <!-- Used by showPopup -->
+        <div id="modal-container" class="modal fade" tabindex="-1" role="dialog"></div>
+
+        <!--Always put footer at end of page-->
+        <script>
+            $(document).ready(function() {
+                // var docHeight = $(window).height();
+                // var footerHeight = $('#footer').height();
+                // var footerTop = $('#footer').position().top + footerHeight;
+            });
+        </script>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,24 @@
+<td>
+  <%= link_to user.username, user %>
+</td>
+<td>
+  <a href='mailto:<%= user.email %>'><%= user.email %></a>
+</td>
+<td>
+  <%= user.name %>
+</td>
+<td>
+  <%= user.department %>
+</td>
+<td>
+  <%= form_for user do |f| %>
+    <%= f.select(:role, User.roles.keys.map {|role| [role.titleize,role]}) %>
+    <%= f.submit 'Update', :id => 'submit_1', :class => 'btn btn-default btn-sm' %>
+  <% end %>
+</td>
+<td>
+  <%= user.sign_in_count %>
+</td>
+<td>
+  <%= link_to("Delete user", user_path(user), :data => { :confirm => "Are you sure?" }, :method => :delete, :class => 'btn btn-default btn-sm') unless user == current_user %>
+</td>

@@ -1,0 +1,34 @@
+
+<p>
+  <strong>Id:</strong>
+  <%= @aws_account.id %>
+</p>
+
+<p>
+  <strong>Account Id:</strong>
+  <%= @aws_account.acct_id %>
+</p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @aws_account.name %>
+</p>
+
+<p>
+  <strong>Desc:</strong>
+  <%= @aws_account.desc %>
+</p>
+
+<p>
+  <strong>Bus unit:</strong>
+  <%= @aws_account.bus_unit %>
+</p>
+
+<p>
+  <strong>Contact:</strong>
+  <%= @aws_account.contact %>
+</p>
+
+
+<%= link_to 'Edit', edit_aws_account_path(@aws_account) %> |
+<%= link_to 'Back', aws_accounts_path %>
